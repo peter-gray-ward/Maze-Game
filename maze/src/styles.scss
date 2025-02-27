@@ -1,16 +1,21 @@
+html {
+    
+}
 html, body {
     width: 100vw;
     height: 100vh;
     box-sizing: border-box;
     padding: 0;
     margin: 0;
+    // transform-style: preserve-3d;
+    // perspective: 1000px;
 }
-body, maze-root {
+maze-root {
     border-left: 1px solid;
     border-bottom: 1px solid;
     display: flex;
     flex-wrap: wrap;
     padding: 0;
     margin: 0;
-    transform-style: preserve-3d;
+    // transform: rotateX(75deg) scale3d(15, 15, 15);
 }

@@ -7,12 +7,12 @@ import { Room } from './models/room';
 import { Door } from './models/door';
 import { Wall } from './models/wall';
 import { DirectionType, Direction, OppositeDirection } from './constants/direction';
-import { KeyOf } from './utils/object';
+import { RoomComponent } from './components/room/room.component';
 
 @Component({
   selector: 'maze-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule],
+  imports: [RouterOutlet, CommonModule, RoomComponent],
   templateUrl: './maze.component.html',
   styleUrl: './maze.component.scss'
 })
@@ -21,29 +21,17 @@ export class MazeComponent {
   dimensions: number = 23;
   wallWidth: string = "0.15rem";
   maze!: Maze;
-  Direction: typeof Direction = Direction;
-  Keys: any = {
-    Direction: Object.keys(Direction) as string[]
-  }
+
   constructor() {
     this.maze = new Maze(this.dimensions);
   }
-  KeyOf(obj: any, value: any): any {
-    return KeyOf(obj, value);
+
+  ngOnInit() {
+    this.generateMaze();
   }
-  isWall(side: any): side is Wall {
-    return side instanceof Wall;
-  }
-  isDoor(side: any): side is Door {
-    return side instanceof Door;
-  }
+
   trackById(index: number, site: MapSite): string {
     return site.id.join(',');
-  }  
-  ngOnInit() {
-    
-    this.generateMaze();
-   
   }
 
   generateMaze(): void {

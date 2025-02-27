@@ -1,0 +1,13 @@
+.room {
+    --dimensions: 23;
+    --wall-width: 0.15rem;
+
+    width: calc(100vw / var(--dimensions) - 1px);
+    height: calc(100vh / var(--dimensions) - 1px);
+    margin: 0;
+    box-sizing: border-box;
+    border-top: 1px solid;
+    border-right: 1px solid;
+    padding: 0;
+    position: relative;
+}

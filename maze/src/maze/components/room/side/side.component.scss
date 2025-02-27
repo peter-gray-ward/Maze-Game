@@ -1,0 +1,35 @@
+.side {
+    position: absolute;
+    &.North {
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: var(--wall-width);
+    }
+    &.South {
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: var(--wall-width);
+    }
+    &.East {
+        top: 0;
+        right: 0;
+        width: var(--wall-width);
+        height: 100%;
+    }
+    &.West {
+        top: 0;
+        left: 0;
+
+        
+        width: var(--wall-width);
+        height: 100%;
+    }
+    &.wall {
+        background: blue;
+    }
+    &.door {
+        background: red;
+    }
+}

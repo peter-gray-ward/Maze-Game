@@ -1,1 +1,3 @@
-<p>room works!</p>
+<div class="room" id="{{ room.roomNumber.join(',') }}" [style.background]="room.color">
+  <side *ngFor="let side of room.sides; trackBy: trackById" [side]="side"></side>
+</div>
