@@ -1,6 +1,3 @@
-const { dir } = require('console');
-const { Dir } = require('fs');
-
 const Direction = {
     North: 0,
     South: 1,
@@ -115,7 +112,6 @@ class MazeGame {
             while (currentRoom !== Math.pow(this.dimensions, 2) - 1) {
                 let roomA = path[currentRoom];
                 let nextRoom;
-                console.log("Current Room", currentRoom);
                 let direction = Math.random() < 0.3 ? directionStrategy[currentDirectionIndex] : directionStrategy[Math.floor(Math.random() * this.dimensions)]; // Get the current direction from the strategy
                 let attempts = 0; // Track the number of attempts to find a valid direction
                 const maxAttempts = 3; // Set a maximum number of attempts
@@ -174,12 +170,9 @@ class MazeGame {
 
                     currentRoom = nextRoom;
                     paths.push(path);
-                } else {
-                    console.log("Invalid next room:", nextRoom); // Optional: log invalid next room
                 }
             }
 
-            console.log("while loop stops", currentRoom);
         }
 
         for (var path of paths) {
@@ -197,13 +190,11 @@ class MazeGame {
 }
 
 
-// Run the game
-let game = new MazeGame(12);
-game.CreateMaze();
-
-console.log("created the maze", game.maze.rooms)
-
 require('http').createServer((req, res) => {
+    let game = new MazeGame(12);
+    game.CreateMaze();
+
+    console.log("created the maze")
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(`<!DOCTYPE html>
 <head>
