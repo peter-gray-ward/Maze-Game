@@ -1,0 +1,6 @@
+<div *ngFor="let room of maze.rooms; trackBy: trackById">
+  <div class="room" id="{{ room.roomNumber.join(',') }}" [style.background]="room.color">
+    <div *ngFor="let side of room.sides; trackBy: trackById"
+      class="side {{ KeyOf(Direction, side.direction) }}" [class.wall]="isWall(side)" [class.door]="isDoor(side)" [style.background]="side.color"></div>
+  </div>
+</div>

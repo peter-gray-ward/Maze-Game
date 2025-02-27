@@ -221,7 +221,7 @@ class MazeGame {
 
                     let adjoiningColor = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`;
 
-                    path[currentRoom].color = 'aliceblue';
+                    path[currentRoom].color = 'maroon';
                     path[currentRoom].text += `,${x++}`;
 
                     path[currentRoom].SetSide(
@@ -258,7 +258,7 @@ class MazeGame {
 
 
 require('http').createServer((req, res) => {
-    let dimensions = 23;
+    let dimensions = 15;
     let game = new MazeGame(dimensions);
     game.CreateMaze();
 
@@ -270,13 +270,13 @@ require('http').createServer((req, res) => {
 <title>Maze</title>
 <style>
 html, body {
-    width: 100vwh;
+    width: 100vw;
     height: 100vh;
     box-sizing: border-box;
     padding: 0;
     margin: 0;
 
-    --wall-width: 0.5rem;
+    --wall-width: 0.15rem;
 }
 body {
     border-left: 1px solid;
@@ -285,6 +285,7 @@ body {
     flex-wrap: wrap;
     padding: 0;
     margin: 0;
+    transform-style: preserve-3d;
 }
 .room {
     width: calc(100vw / ${dimensions} - 1px);
