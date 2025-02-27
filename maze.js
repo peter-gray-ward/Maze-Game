@@ -1,3 +1,6 @@
+const { dir } = require('console');
+const { Dir } = require('fs');
+
 const Direction = {
     North: 0,
     South: 1,
@@ -91,50 +94,102 @@ class Maze {
 }
 
 class MazeGame {
+    dimensions;
     maze;
     doorConnections = new Set();
     
     constructor(dimensions = 12) {
+        this.dimensions = dimensions;
         this.maze = new Maze(dimensions);
     }
 
     CreateMaze() {
-        var currentRoom = 0; // Start from the first room
-        var direction = Direction.East; // Start by moving East
+        var currentRoom = 0;
+        var paths = [];
+        const directionStrategy = [Direction.North, Direction.East, Direction.South, Direction.West]; // Trending strategy
+        let currentDirectionIndex = 0; // Start with North
 
-        while (currentRoom !== 144) { // Continue until reaching the last room
-            let roomA = this.maze.rooms[currentRoom];
-            let nextRoom;
+        for (var i = 0; i < 1; i++) {
+            var path = this.maze.rooms;
+            
+            while (currentRoom !== Math.pow(this.dimensions, 2) - 1) {
+                let roomA = path[currentRoom];
+                let nextRoom;
+                console.log("Current Room", currentRoom);
+                let direction = Math.random() < 0.3 ? directionStrategy[currentDirectionIndex] : directionStrategy[Math.floor(Math.random() * this.dimensions)]; // Get the current direction from the strategy
+                let attempts = 0; // Track the number of attempts to find a valid direction
+                const maxAttempts = 3; // Set a maximum number of attempts
 
-            // Determine the next room based on the current direction
-            if (direction === Direction.East) {
-                nextRoom = currentRoom + 1; // Move East
-            } else {
-                nextRoom = currentRoom + 12; // Move South
+                if (Math.random() < 0.015) {
+                    direction = Direction.opposite(direction);
+                }
+
+                while (
+                    (direction == Direction.West && (currentRoom == 0 || currentRoom % this.dimensions == 0)) ||
+                    (direction == Direction.East && currentRoom % this.dimensions == this.dimensions - 1) ||
+                    (direction == Direction.South && currentRoom >= this.dimensions * (this.dimensions - 1)) ||
+                    (direction == Direction.North && currentRoom < this.dimensions)
+                ) {
+                    // Switch to the next direction in the strategy
+                    currentDirectionIndex = (currentDirectionIndex + 1) % directionStrategy.length; // Cycle through directions
+                    direction = directionStrategy[currentDirectionIndex]; // Update direction
+                    attempts++;
+
+                    // Check if maximum attempts have been reached
+                    if (attempts >= maxAttempts) {
+                        console.log("Max attempts reached, backtracking...", nextRoom, currentRoom);
+                        // Backtrack logic here (if needed)
+                        break; // Exit the loop to prevent infinite loop
+                    }
+                }
+
+                switch (direction) {
+                    case Direction.East:
+                        nextRoom = currentRoom + 1;
+                        break;
+                    case Direction.South:
+                        nextRoom = currentRoom + this.dimensions;
+                        break;
+                    case Direction.West:
+                        nextRoom = currentRoom - 1;
+                        break;
+                    case Direction.North:
+                        nextRoom = currentRoom - this.dimensions;
+                        break;
+                }
+
+                // Check if nextRoom is valid before accessing roomB
+                if (nextRoom < path.length) {
+                    let roomB = path[nextRoom];
+
+                    path[currentRoom].SetSide(
+                        direction,
+                        new Door(direction, roomA, roomB)
+                    );
+
+                    path[nextRoom].SetSide(
+                        Direction.opposite(direction),
+                        new Door(Direction.opposite(direction), roomB, roomA)
+                    );
+
+                    currentRoom = nextRoom;
+                    paths.push(path);
+                } else {
+                    console.log("Invalid next room:", nextRoom); // Optional: log invalid next room
+                }
             }
 
-            // Ensure nextRoom is valid
-            if (nextRoom < this.maze.rooms.length) {
-                let roomB = this.maze.rooms[nextRoom];
+            console.log("while loop stops", currentRoom);
+        }
 
-                // Create a door between the current room and the next room
-                this.maze.rooms[currentRoom].SetSide(
-                    direction,
-                    new Door(direction, roomA, roomB)
-                );
-
-                this.maze.rooms[nextRoom].SetSide(
-                    Direction.opposite(direction),
-                    new Door(Direction.opposite(direction), roomB, roomA)
-                );
-
-                // Update currentRoom to the next room
-                currentRoom = nextRoom;
-
-                // Alternate direction
-                direction = direction === Direction.East ? Direction.South : Direction.East;
-            } else {
-                break; // Exit if nextRoom is invalid
+        for (var path of paths) {
+            for (var i = 0; i < path.length; i++) {
+                for (var j = 0; j < this.maze.rooms[i].sides.length; j++) {
+                    if (path[i].sides[j] instanceof Door && !(this.maze.rooms[i].sides[j] instanceof Door)) {
+                        this.maze.rooms[i].sides[j] = path[i].sides[j];
+                    }
+                }
+                this.maze.rooms[i] = path[i];
             }
         }
         console.log("Finished creating the maze path");
