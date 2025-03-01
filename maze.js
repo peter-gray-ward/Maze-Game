@@ -59,12 +59,10 @@ class Door extends Side {
 }
 
 class Room extends MapSite {
-    roomNumber;
     sides = Array.from({ length: 4 }).fill(null);
 
-    constructor(roomNumber) {
-        super();
-        this.roomNumber = roomNumber;
+    constructor(id) {
+        super(id);
     }
 
     SetSide(dir, side) {
@@ -94,8 +92,8 @@ class Maze {
         this.rooms.push(room);
     }
 
-    RoomNumber(roomNumber) {
-        return this.rooms.find(room => room.roomNumber.join(',') == roomNumber.join(','));
+    RoomNumber(id) {
+        return this.rooms.find(room => room.id.join(',') == id.join(','));
     }
 }
 
@@ -337,7 +335,7 @@ body {
 <body>
     ${
         game.maze.rooms.map(room => {
-            return `<div class="room" id="${room.roomNumber.join(",")}" style="background:${room.color}">
+            return `<div class="room" id="${room.id.join(",")}" style="background:${room.color}">
                 ${
                     Object.values(Direction).map(dir => {
                         let side = room.GetSide(dir);

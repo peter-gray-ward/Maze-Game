@@ -6,10 +6,9 @@ export class Side extends MapSite {
     roomB: Room;
     direction: number;
 
-    constructor(direction: number, roomA: Room, roomB: Room) {
-        super();
+    constructor(id: number[], direction: number, roomA: Room, roomB: Room) {
+        super(id);
         this.direction = direction;
-        this.id = roomA.roomNumber.concat(roomB.roomNumber);
         this.roomA = roomA;
         this.roomB = roomB;
     }

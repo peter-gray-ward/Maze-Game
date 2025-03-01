@@ -2,14 +2,19 @@ import { Side } from './side';
 import { Room } from './room';
 
 export class Wall extends Side {
-    constructor(direction: number, roomA: Room, roomB: Room) {
-        super(direction, roomA, roomB);
+    constructor(id: number[], direction: number, roomA: Room, roomB: Room) {
+        super(id, direction, roomA, roomB);
     }
 
     static WallBuilder = class {
+        private _id!: number[];
         private _direction!: number;
         private _roomA!: Room;
         private _roomB!: Room;
+        id(id: number[]): this {
+            this._id = id;
+            return this;
+        }
         direction(direction: number): this {
             this._direction = direction;
             return this;
@@ -20,7 +25,7 @@ export class Wall extends Side {
             return this;
         }
         build() {
-            return new Wall(this._direction, this._roomA, this._roomB);
+            return new Wall(this._id, this._direction, this._roomA, this._roomB);
         }
     }
 }

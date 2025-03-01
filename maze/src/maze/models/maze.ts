@@ -2,11 +2,20 @@ import { Room } from './room';
 import { Side } from './side';
 import { Direction } from '../constants/direction';
 
+export interface IMaze {
+    rooms: Room[];
+    outside: Room;
+    dimensions: number;
+}
+
 export class Maze {
     rooms: Room[] = [];
     outside: Room = new Room([-1]);
+    dimensions!: number;
 
     constructor(dimensions: number) {
+        this.dimensions = dimensions;
+
         for (var x = 0; x < dimensions; x++) {
             for (var y = 0; y < dimensions; y++) {
                 this.AddRoom(new Room([x, y]));
@@ -19,10 +28,10 @@ export class Maze {
             const y = Math.floor(i / dimensions);
             const roomA = this.rooms[i];
             roomA.sides = [
-                new Side(Direction.North, roomA, this.getAdjacentRoom(x, y - 1)), // North
-                new Side(Direction.East, roomA, this.getAdjacentRoom(x + 1, y)), // East
-                new Side(Direction.South, roomA, this.getAdjacentRoom(x, y + 1)), // South
-                new Side(Direction.West, roomA, this.getAdjacentRoom(x - 1, y))  // West
+                new Side(roomA.id.concat([Direction.North]), Direction.North, roomA, this.getAdjacentRoom(x, y - 1)), // North
+                new Side(roomA.id.concat([Direction.East]), Direction.East, roomA, this.getAdjacentRoom(x + 1, y)), // East
+                new Side(roomA.id.concat([Direction.South]), Direction.South, roomA, this.getAdjacentRoom(x, y + 1)), // South
+                new Side(roomA.id.concat([Direction.West]), Direction.West, roomA, this.getAdjacentRoom(x - 1, y))  // West
             ];
         }
     }
@@ -39,7 +48,8 @@ export class Maze {
         this.rooms.push(room);
     }
 
-    RoomNumber(roomNumber: number[]) {
-        return this.rooms.find(room => room.roomNumber.join(',') == roomNumber.join(','));
+    RoomNumber(id: number[]) {
+        return this.rooms.find(room => room.id.join(',') == id.join(','));
     }
+    
 }

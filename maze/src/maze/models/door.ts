@@ -4,16 +4,22 @@ import { Room } from './room';
 export class Door extends Side {
     open: boolean = false;
 
-    constructor(direction: number, roomA: Room, roomB: Room, color: string) {
-        super(direction, roomA, roomB);
+    constructor(id: number[], direction: number, roomA: Room, roomB: Room, color: string) {
+        super(id, direction, roomA, roomB);
         this.color = color;
     }
 
     static DoorBuilder = class {
+        private _id!: number[];
         private _direction!: number;
         private _roomA!: Room;
         private _roomB!: Room;
         private _color!: string;
+
+        id(id: number[]): this {
+            this._id = id;
+            return this;
+        }
 
         direction(direction: number): this {
             this._direction = direction;
@@ -32,10 +38,10 @@ export class Door extends Side {
         }
 
         build(): Door {
-            if (this._direction === undefined || !this._roomA || !this._roomB || !this._color) {
+            if (!this._id || this._direction === undefined || !this._roomA || !this._roomB || !this._color) {
                 throw new Error("Missing required properties to create a Door");
             }
-            return new Door(this._direction, this._roomA, this._roomB, this._color);
+            return new Door(this._id, this._direction, this._roomA, this._roomB, this._color);
         }
     }
 }
