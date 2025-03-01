@@ -44,4 +44,8 @@ export class Door extends Side {
             return new Door(this._id, this._direction, this._roomA, this._roomB, this._color);
         }
     }
+
+    override GetRandomTexture(): string {
+        return "green";
+    }
 }

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export class MapSite {
+export abstract class MapSite {
     color: string = "transparent";
     text: string = "";
     id: number[] = [];
@@ -19,6 +19,7 @@ export class MapSite {
                  new THREE.Vector3(-width / 2, -height / 2, -depth / 2)
             );
         }
-        console.log(this)
     }
+
+    abstract GetRandomTexture(): string;
 }

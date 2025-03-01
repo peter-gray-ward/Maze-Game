@@ -1,4 +1,5 @@
 import { Room } from './room';
+import { Wall } from './wall';
 import { Side } from './side';
 import { Direction } from '../constants/direction';
 
@@ -28,10 +29,10 @@ export class Maze {
             const y = Math.floor(i / dimensions);
             const roomA = this.rooms[i];
             roomA.sides = [
-                new Side(roomA.id.concat([Direction.North]), Direction.North, roomA, this.getAdjacentRoom(x, y - 1)), // North
-                new Side(roomA.id.concat([Direction.East]), Direction.East, roomA, this.getAdjacentRoom(x + 1, y)), // East
-                new Side(roomA.id.concat([Direction.South]), Direction.South, roomA, this.getAdjacentRoom(x, y + 1)), // South
-                new Side(roomA.id.concat([Direction.West]), Direction.West, roomA, this.getAdjacentRoom(x - 1, y))  // West
+                new Wall(roomA.id.concat([Direction.North]), Direction.North, roomA, this.getAdjacentRoom(x, y - 1)), // North
+                new Wall(roomA.id.concat([Direction.East]), Direction.East, roomA, this.getAdjacentRoom(x + 1, y)), // East
+                new Wall(roomA.id.concat([Direction.South]), Direction.South, roomA, this.getAdjacentRoom(x, y + 1)), // South
+                new Wall(roomA.id.concat([Direction.West]), Direction.West, roomA, this.getAdjacentRoom(x - 1, y))  // West
             ];
         }
     }

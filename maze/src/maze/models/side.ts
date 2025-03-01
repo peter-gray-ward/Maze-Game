@@ -1,7 +1,7 @@
 import { MapSite } from './map-site';
 import { Room } from './room';
 
-export class Side extends MapSite {
+export abstract class Side extends MapSite {
     roomA: Room;
     roomB: Room;
     direction: number;

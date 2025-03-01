@@ -21,4 +21,7 @@ export class User extends MapSite {
 		this.box = new THREE.Box3().setFromObject(this.model.scene);
 		console.log(this);
 	}
+	override GetRandomTexture(): string {
+		return "peach";
+	}
 }

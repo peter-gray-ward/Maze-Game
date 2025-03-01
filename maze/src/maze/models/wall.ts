@@ -28,4 +28,8 @@ export class Wall extends Side {
             return new Wall(this._id, this._direction, this._roomA, this._roomB);
         }
     }
+
+    override GetRandomTexture(): string {
+        return "green";
+    }
 }
