@@ -7,8 +7,14 @@ html, body {
     box-sizing: border-box;
     padding: 0;
     margin: 0;
-    // transform-style: preserve-3d;
-    // perspective: 1000px;
+    canvas {
+        width: 100vw;
+        height: 100vw;
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 1;
+    }
 }
 maze-root {
     border-left: 1px solid;
@@ -17,5 +23,4 @@ maze-root {
     flex-wrap: wrap;
     padding: 0;
     margin: 0;
-    // transform: rotateX(75deg) scale3d(15, 15, 15);
 }

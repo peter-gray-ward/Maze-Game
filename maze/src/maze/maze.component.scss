@@ -1,0 +1,21 @@
+#header {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 5vh;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    color: white;
+    font-family: Andale Mono;
+    padding: 0.2rem;
+    box-sizing: border-box;
+    z-index: 2;
+
+    a {
+        &:hover {
+            cursor: pointer;
+            color: #EBEDEF;
+        }
+    }
+}

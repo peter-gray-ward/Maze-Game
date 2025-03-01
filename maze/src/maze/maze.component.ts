@@ -8,6 +8,7 @@ import { Door } from './models/door';
 import { Wall } from './models/wall';
 import { DirectionType, Direction, OppositeDirection } from './constants/direction';
 import { RoomComponent } from './components/room/room.component';
+import * as THREE from 'three';
 
 @Component({
   selector: 'maze-root',
@@ -21,9 +22,31 @@ export class MazeComponent {
   dimensions: number = 23;
   wallWidth: string = "0.15rem";
   maze!: Maze;
+  scene!: THREE.Scene;
+  renderer!: THREE.WebGLRenderer;
+  camera!: THREE.PerspectiveCamera;
+  toggle: any = {
+    map: false
+  };
 
   constructor() {
     this.maze = new Maze(this.dimensions);
+    this.scene = new THREE.Scene();
+    this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.domElement.id = "view";
+    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 10000);
+    this.camera.near = 0.1; 
+    this.camera.far = 10000;
+    document.body.appendChild(this.renderer.domElement);
+    this.animate();
+  }
+
+  animate() {
+    this.renderer.render(this.scene, this.camera);
+    window.requestAnimationFrame(this.animate.bind(this));
   }
 
   ngOnInit() {
@@ -32,6 +55,15 @@ export class MazeComponent {
 
   trackById(index: number, site: MapSite): string {
     return site.id.join(',');
+  }
+
+  toggleMap() {
+    this.toggle.map = !this.toggle.map;
+    if (!this.toggle.map) {
+      this.renderer.domElement.style.display = 'flex';
+    } else {
+      this.renderer.domElement.style.display = 'none';
+    }
   }
 
   generateMaze(): void {
