@@ -16,7 +16,6 @@ import { CommonModule } from '@angular/common';
 })
 export class RoomComponent {
   @Input() room!: Room;
-  @Input() user!: any;
   Direction: typeof Direction = Direction;
 
   Keys: any = {

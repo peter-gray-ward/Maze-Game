@@ -1,11 +1,12 @@
 import { Side } from './side';
+import { Game } from '../singletons/game';
 import { Room } from './room';
 
 export class Door extends Side {
     open: boolean = false;
 
-    constructor(id: number[], direction: number, roomA: Room, roomB: Room, color: string) {
-        super(id, direction, roomA, roomB);
+    constructor(game: Game, id: number[], direction: number, roomA: Room, roomB: Room, color: string) {
+        super(game, id, direction, roomA, roomB);
         this.color = color;
     }
 
@@ -15,6 +16,12 @@ export class Door extends Side {
         private _roomA!: Room;
         private _roomB!: Room;
         private _color!: string;
+        private _game!: Game;
+
+        game(game: Game): this {
+            this._game = game;
+            return this;
+        }
 
         id(id: number[]): this {
             this._id = id;
@@ -38,10 +45,10 @@ export class Door extends Side {
         }
 
         build(): Door {
-            if (!this._id || this._direction === undefined || !this._roomA || !this._roomB || !this._color) {
+            if (!this._game || !this._id || this._direction === undefined || !this._roomA || !this._roomB || !this._color) {
                 throw new Error("Missing required properties to create a Door");
             }
-            return new Door(this._id, this._direction, this._roomA, this._roomB, this._color);
+            return new Door(this._game, this._id, this._direction, this._roomA, this._roomB, this._color);
         }
     }
 

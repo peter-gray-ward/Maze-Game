@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Game } from '../singletons/game';
 
 export abstract class MapSite {
     color: string = "transparent";
@@ -6,9 +7,11 @@ export abstract class MapSite {
     id: number[] = [];
     scene: THREE.Group = new THREE.Group;
     box: THREE.Box3 | null = null;
+    game: Game;
 
-    constructor(id: number[]) {
+    constructor(game: Game, id: number[]) {
         this.id = id;
+        this.game = game;
     }
 
     Build(position: THREE.Vector3, width: number, height: number, depth: number) {

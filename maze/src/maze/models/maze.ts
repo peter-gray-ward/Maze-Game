@@ -2,24 +2,28 @@ import { Room } from './room';
 import { Wall } from './wall';
 import { Side } from './side';
 import { Direction } from '../constants/direction';
+import { Game } from '../singletons/game';
 
 export interface IMaze {
     rooms: Room[];
-    outside: Room;
+    outside: Room | null;
     dimensions: number;
 }
 
 export class Maze {
     rooms: Room[] = [];
-    outside: Room = new Room([-1]);
+    outside!: Room;
     dimensions!: number;
+    game!: Game;
 
-    constructor(dimensions: number) {
+    constructor(game: Game, dimensions: number) {
         this.dimensions = dimensions;
+        this.game = game;
+        this.outside = new Room(game, [-1]);
 
         for (var x = 0; x < dimensions; x++) {
             for (var y = 0; y < dimensions; y++) {
-                this.AddRoom(new Room([x, y]));
+                this.AddRoom(new Room(this.game, [x, y]));
             }
         }
 
@@ -29,10 +33,30 @@ export class Maze {
             const y = Math.floor(i / dimensions);
             const roomA = this.rooms[i];
             roomA.sides = [
-                new Wall(roomA.id.concat([Direction.North]), Direction.North, roomA, this.getAdjacentRoom(x, y - 1)), // North
-                new Wall(roomA.id.concat([Direction.East]), Direction.East, roomA, this.getAdjacentRoom(x + 1, y)), // East
-                new Wall(roomA.id.concat([Direction.South]), Direction.South, roomA, this.getAdjacentRoom(x, y + 1)), // South
-                new Wall(roomA.id.concat([Direction.West]), Direction.West, roomA, this.getAdjacentRoom(x - 1, y))  // West
+                new Wall.WallBuilder()
+                    .game(this.game)
+                    .id(roomA.id.concat([Direction.North]))
+                    .direction(Direction.North)
+                    .rooms(roomA, this.getAdjacentRoom(x, y - 1))
+                    .build() as Side,
+                new Wall.WallBuilder()
+                    .game(this.game)
+                    .id(roomA.id.concat([Direction.East]))
+                    .direction(Direction.East)
+                    .rooms(roomA, this.getAdjacentRoom(x + 1, y))
+                    .build() as Side,
+                new Wall.WallBuilder()
+                    .game(this.game)
+                    .id(roomA.id.concat([Direction.South]))
+                    .direction(Direction.South)
+                    .rooms(roomA, this.getAdjacentRoom(x, y + 1))
+                    .build() as Side,
+                new Wall.WallBuilder()
+                    .game(this.game)
+                    .id(roomA.id.concat([Direction.West]))
+                    .direction(Direction.West)
+                    .rooms(roomA, this.getAdjacentRoom(x - 1, y))
+                    .build() as Side
             ];
         }
     }

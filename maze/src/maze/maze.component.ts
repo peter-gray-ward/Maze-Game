@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MapSite } from './models/map-site';
@@ -11,6 +11,7 @@ import { RoomComponent } from './components/room/room.component';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { User, GLTFModel } from './models/user';
+import { Game } from './singletons/game';
 
 @Component({
   selector: 'maze-root',
@@ -25,59 +26,46 @@ export class MazeComponent {
   wallWidth: string = "0.15rem";
   maze: IMaze = {
     rooms: [],
-    outside: new Room([-1]),
+    outside: null,
     dimensions: this.dimensions
   };
-  scene!: THREE.Scene;
-  renderer!: THREE.WebGLRenderer;
   toggle: any = {
     map: false
   };
   user!: User;
+  game: Game = inject(Game);
 
   constructor() {
-    this.maze = new Maze(this.dimensions);
-    this.scene = new THREE.Scene();
-    this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.renderer.domElement.id = "view";
-    document.body.appendChild(this.renderer.domElement);
+    this.maze = new Maze(this.game, this.dimensions);
   }
 
   ngOnInit() {
     new GLTFLoader().load("/Xbot.glb", model => {
-      this.user = new User(model);
-      this.user.camera.near = 0.1; 
-      this.user.camera.far = 10000;
-      console.log("🧍 User model loaded", this.user);
+      const user = new User(this.game, model);
+      user.camera.near = 0.1; 
+      user.camera.far = 10000;
+      this.game.init(user);
+      console.log("🧍 User model loaded", user);
       this.generateMaze();
       this.build3DMaze();
-      this.animate();
     });
   }
 
-  animate() {
-    this.renderer.render(this.scene, this.user.camera);
-    window.requestAnimationFrame(this.animate.bind(this));
-  }
-
-  trackById(index: number, site: MapSite): string {
+  trackById(index: number, site: Room): string {
     return site.id.join(',');
   }
 
   toggleMap() {
     this.toggle.map = !this.toggle.map;
     if (!this.toggle.map) {
-      this.renderer.domElement.style.display = 'flex';
+      this.game.renderer.domElement.style.display = 'flex';
     } else {
-      this.renderer.domElement.style.display = 'none';
+      this.game.renderer.domElement.style.display = 'none';
     }
   }
 
   generateMaze(): void {
-    this.maze = new Maze(this.dimensions);
+    this.maze = new Maze(this.game, this.dimensions);
     var currentRoom = 0;
     var paths = [];
     const directionStrategy: DirectionType[] = Object.keys(Direction)
@@ -198,6 +186,7 @@ export class MazeComponent {
           path[currentRoom].SetSide(
             direction,
             new Door.DoorBuilder()
+              .game(this.game)
               .id(roomA.id.concat([direction]))
               .direction(direction)
               .rooms(roomA, roomB) 
@@ -208,6 +197,7 @@ export class MazeComponent {
           path[nextRoom].SetSide(
             OppositeDirection(direction),
             new Door.DoorBuilder()
+              .game(this.game)
               .id(roomB.id.concat([OppositeDirection(direction)]))
               .direction(OppositeDirection(direction))
               .rooms(roomB, roomA) 

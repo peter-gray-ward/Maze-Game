@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Game } from '../singletons/game';
 import { MapSite } from './map-site';
 
 export interface GLTFModel {
@@ -14,8 +15,8 @@ export interface GLTFModel {
 export class User extends MapSite {
 	model!: GLTFModel;
 	camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-	constructor(model: GLTFModel) {
-		super([0]);
+	constructor(game: Game, model: GLTFModel) {
+		super(game, [0]);
 		this.model = model;
 		this.model.scene.children[0].scale.set(0.4, 0.4, 0.4);
 		this.box = new THREE.Box3().setFromObject(this.model.scene);
