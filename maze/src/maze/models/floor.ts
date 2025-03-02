@@ -14,15 +14,18 @@ export class Floor extends MapSite {
     }
 
     override Build() {
+        this.scene.name = this.id.join(',');
         const floorMesh = new THREE.Mesh(
             new THREE.BoxGeometry(this.width, 12, this.depth),
             new THREE.MeshStandardMaterial({
                 map: floorTexture,
+                color: new THREE.Color(Math.random(), Math.random(), Math.random()),
                 side: THREE.DoubleSide,
                 wireframe: false
             })
         );
         floorMesh.receiveShadow = true;
+        floorMesh.castShadow = true;
         floorMesh.position.copy(this.position);
         this.scene.add(floorMesh);
     }

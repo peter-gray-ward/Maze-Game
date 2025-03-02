@@ -5,7 +5,7 @@ export abstract class MapSite {
     public color: string = "transparent";
     public text: string = "";
     public id: number[] = [];
-    public scene: THREE.Group = new THREE.Group();
+    public scene: THREE.Group | THREE.Mesh = new THREE.Group();
     public box: THREE.Box3 | null = null;
     public game: Game;
     public active: boolean = false;
@@ -95,13 +95,13 @@ export abstract class MapSite {
             for (let child of childrenCopy) {
                 this.game.scene.add(child);
             }
+            this.scene.children = childrenCopy;
         }
         this.active = true;
     }
 
     Remove() {
         if (this.active) {
-            console.log("removing room")
             for (let child of this.scene.children) {
                 this.game.scene.remove(child);
             }

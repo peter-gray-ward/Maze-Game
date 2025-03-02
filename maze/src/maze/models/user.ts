@@ -61,18 +61,19 @@ export class User extends MapSite {
         this.model.scene.children[0].scale.set(0.4, 0.4, 0.4);
         this.model.scene.rotateY(Math.PI);
         this.box = new THREE.Box3().setFromObject(this.model.scene);
-        this.model.scene.position.set(0, -95, 0);
+        this.model.scene.position.set(0, -1100, 0);
 
         const headBone = this.model.scene.getObjectByName("Beta_Joints");
         if (headBone) {
             headBone.add(this.camera);
-            this.camera.position.set(0, 500, this.cameraOffset); 
+            this.camera.position.set(0, 200, this.cameraOffset); 
             this.camera.rotation.set(0, Math.PI, 0);
         } else {
             console.warn("Head bone not found in GLTF model!");
         }
 
         this.addEvents();
+        this.startAnimation('lounge')
         this.loaded.next(this);
     }
 
@@ -88,12 +89,12 @@ export class User extends MapSite {
         const headBone = this.model.scene.getObjectByName("Beta_Joints");
         if (headBone) {
             headBone.add(this.camera);
-            this.camera.position.set(0, 500, this.cameraOffset);
+            this.camera.position.set(0, 200, this.cameraOffset);
         }
     }
 
-    private rotate(angle: number): void {
-        this.model.scene.rotateY(angle);
+    private rotate(dir: number): void {
+        this.model.scene.rotateY(dir * 0.1);
     }
 
 
@@ -112,30 +113,26 @@ export class User extends MapSite {
 
             switch (key) {
                 case 'w':
-                    this.move(v.multiplyScalar(this.speed));
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
                     break;
                 case 's':
-                    this.move(v.multiplyScalar(-this.speed));
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
                     break;
                 case 'a':
-                    this.move(strafeDirection.multiplyScalar(this.speed));
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
                     break;
                 case 'd':
-                    this.move(strafeDirection.multiplyScalar(-this.speed));
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
                     break;
                 case 'arrowleft':
-                    this.rotate(Math.PI / 11);
+                    this.rotate(1);
                     break;
                 case 'arrowright':
-                    this.rotate(-Math.PI / 11);
+                    this.rotate(-1);
                     break;  
             }
         });
@@ -143,12 +140,37 @@ export class User extends MapSite {
         fromEvent(window, 'keyup').subscribe((event: any) => {
             let key = event.key.toLowerCase();
             this.actions[key] = false;
-            if (['w', 's', 'a', 'd'].includes(key)) {
-                if (this.animations.walk) {
-                    this.animations.walk.action.stop();
-                    this.animations.walk.speedFactor = 0;
-                    this.startAnimation('lounge');
-                }
+            switch (key) {
+                case 'w':
+                    if (!this.actions.s && !this.actions.a && !this.actions.d) {
+                        this.animations.walk.speedFactor = 0;
+                        this.startAnimation('lounge');
+                    }
+                    break;
+                case 's':
+                    if (!this.actions.a && !this.actions.w && !this.actions.d) {
+                        this.animations.walk.speedFactor = 0;
+                        this.startAnimation('lounge');
+                    }
+                    break;
+                case 'a':
+                    if (!this.actions.s && !this.actions.w && !this.actions.d) {
+                        this.animations.walk.speedFactor = 0;
+                        this.startAnimation('lounge');
+                    }
+                    break;
+                case 'd':
+                    if (!this.actions.s && !this.actions.a && !this.actions.w) {
+                        this.animations.walk.speedFactor = 0;
+                        this.startAnimation('lounge');
+                    }
+                    break;
+                case 'arrowleft':
+                    this.rotate(1);
+                    break;
+                case 'arrowright':
+                    this.rotate(-1);
+                    break;  
             }
         });
     }
@@ -232,10 +254,10 @@ export class User extends MapSite {
                         this.move(v.multiplyScalar(-this.speed));
                         break;
                     case 'a':
-                        this.move(strafeDirection.multiplyScalar(this.speed));
+                        this.move(strafeDirection.clone().multiplyScalar(this.speed));
                         break;
                     case 'd':
-                        this.move(strafeDirection.multiplyScalar(-this.speed));
+                        this.move(strafeDirection.clone().multiplyScalar(-this.speed));
                         break;
                     case 'arrowleft':
                         this.rotate(Math.PI / 11);
@@ -247,12 +269,16 @@ export class User extends MapSite {
             }
         }
         for (let which in this.animations) {
-            if (this.animations[which] && this.animations[which].speedFactor) {
+            if (this.animations[which]) {
                 const action = this.animations[which].action;
-                if (!action.isRunning()) {
-                    action.play();
+                if (this.animations[which].speedFactor) {
+                    if (!action.isRunning()) {
+                        action.play();
+                    }
+                    action.setEffectiveTimeScale(this.animations[which].speedFactor);
+                } else {
+                    action.stop();
                 }
-                action.setEffectiveTimeScale(this.animations[which].speedFactor);
             }
         }
         this.animationMixer.update(0.016); // Update animation mixer every frame (~60 FPS)

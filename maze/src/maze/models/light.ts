@@ -14,6 +14,7 @@ export class CeilingLight extends Light {
 
     override Build() {
         super.Build();
+        this.scene.name = 'light - ' + this.id.join(',');
         this.scene.add(this.light);
     }
 

@@ -18,9 +18,9 @@ export class Maze {
     dimensions!: number;
     game!: Game;
     text: string = "The Maze";
-    roomWidth: number = 2000;
-    roomHeight: number = 800;
-    roomDepth: number = 2000;
+    roomWidth: number = 5000;
+    roomHeight: number = 2800;
+    roomDepth: number = 5000;
     userPosition: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
 
     constructor(game: Game, dimensions: number) {
@@ -119,7 +119,6 @@ export class Maze {
                     .build() as Side
             ];
         }
-
     }
 
     init(user: User) {
@@ -127,7 +126,6 @@ export class Maze {
     }
 
     private getAdjacentRoom(x: number, y: number): Room {
-        // Check if the room exists within the bounds of the maze
         if (x < 0 || y < 0 || x >= Math.sqrt(this.rooms.length) || y >= Math.sqrt(this.rooms.length)) {
             return this.outside; // Return outside if out of bounds
         }
@@ -143,7 +141,7 @@ export class Maze {
     }
 
     Act(): void {
-        const threshold = this.roomWidth * 2;
+        const threshold = this.roomWidth// * 1.5;
         for (let room of this.rooms) {
             const roomNear = room.position.distanceTo(this.userPosition) < threshold;
             if (roomNear) {
