@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { Game } from '../singletons/game';
 import { MapSite } from './map-site';
-import { fromEvent } from 'rxjs';
+import { fromEvent, Subject } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export interface GLTFModel {
 	animations: any[];
@@ -16,7 +18,7 @@ export interface GLTFModel {
 export class User extends MapSite {
     model!: GLTFModel;
     camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-    speed: number = 30;
+    speed: number = 12;
     animationMixer!: THREE.AnimationMixer;
     animations: any = {
         walk: null,
@@ -25,7 +27,13 @@ export class User extends MapSite {
         strafe: null,
         run: null
     };
-    cameraOffset: number = 8;
+    actions: any = {
+        w: false, a: false, s: false, d: false,
+        arrowleft: false, arrowup: false, arrowdown: false, arrowright: false
+    };
+    cameraOffset: number = -300;
+    loaded = new Subject<User>();
+    activity = new Subject<User>();
 
     constructor(
         game: Game,
@@ -34,35 +42,38 @@ export class User extends MapSite {
         width: number,
         height: number,
         depth: number,
-        model: GLTFModel,
         color: string = "peach",
         text: string = ""
     ) {
         super(game, id, position, width, height, depth, color, text);
-        this.model = model;
-        this.animationMixer = new THREE.AnimationMixer(this.model.scene);
-        this.init();
+        new GLTFLoader().load("/Xbot.glb", model => {
+            this.model = model;
+            this.animationMixer = new THREE.AnimationMixer(this.model.scene);
+            this.init(model);
+        });
     }
 
-    private init() {
-        this.camera.near = 0.1;
-        this.camera.far = 10000;
+    private init(model: GLTFModel) {
+        this.model = model;
+        this.camera.near = 0.1; 
+        this.camera.far = 1000000;
         this.camera.updateProjectionMatrix();
         this.model.scene.children[0].scale.set(0.4, 0.4, 0.4);
         this.model.scene.rotateY(Math.PI);
         this.box = new THREE.Box3().setFromObject(this.model.scene);
-        this.model.scene.position.set(0, 0, 0);
+        this.model.scene.position.set(0, -95, 0);
 
-        const headBone = this.model.scene.getObjectByName("mixamorigNeck");
+        const headBone = this.model.scene.getObjectByName("Beta_Joints");
         if (headBone) {
             headBone.add(this.camera);
-            this.camera.position.set(0, 0.2, this.cameraOffset); 
+            this.camera.position.set(0, 500, this.cameraOffset); 
             this.camera.rotation.set(0, Math.PI, 0);
         } else {
             console.warn("Head bone not found in GLTF model!");
         }
 
         this.addEvents();
+        this.loaded.next(this);
     }
 
     override GetRandomTexture(): string {
@@ -74,10 +85,10 @@ export class User extends MapSite {
         this.camera.position.add(v);
         this.model.scene.position.add(v);
 
-        const headBone = this.model.scene.getObjectByName("mixamorigNeck");
+        const headBone = this.model.scene.getObjectByName("Beta_Joints");
         if (headBone) {
             headBone.add(this.camera);
-            this.camera.position.set(0, 0.2, this.cameraOffset);
+            this.camera.position.set(0, 500, this.cameraOffset);
         }
     }
 
@@ -88,15 +99,18 @@ export class User extends MapSite {
 
     private addEvents(): void {
         fromEvent(window, 'keydown').subscribe((event: any) => {
-            let v = new THREE.Vector3();
-            this.camera.getWorldDirection(v);
-            v.y = 0; // Lock to X/Z plane
-            v.normalize();
+            let key = event.key.toLowerCase();
 
+            let y = 0;
+            this.actions[key] = true;
+            let v = new THREE.Vector3();
+            v.y = y;
+            this.camera.getWorldDirection(v);
+            v.normalize();
             let strafeDirection = new THREE.Vector3();
             strafeDirection.crossVectors(this.camera.up, v).normalize();
 
-            switch (event.key.toLowerCase()) {
+            switch (key) {
                 case 'w':
                     this.move(v.multiplyScalar(this.speed));
                     this.startAnimation('walk');
@@ -118,16 +132,17 @@ export class User extends MapSite {
                     this.stopAnimation('lounge');
                     break;
                 case 'arrowleft':
-                    this.rotate(Math.PI / 32);
+                    this.rotate(Math.PI / 11);
                     break;
                 case 'arrowright':
-                    this.rotate(-Math.PI / 32);
-                    break;
+                    this.rotate(-Math.PI / 11);
+                    break;  
             }
         });
 
         fromEvent(window, 'keyup').subscribe((event: any) => {
             let key = event.key.toLowerCase();
+            this.actions[key] = false;
             if (['w', 's', 'a', 'd'].includes(key)) {
                 if (this.animations.walk) {
                     this.animations.walk.action.stop();
@@ -198,6 +213,39 @@ export class User extends MapSite {
 
     override Act(): void {
         super.Act();
+        let y = 0;
+        let v = new THREE.Vector3();
+        this.camera.getWorldDirection(v);
+        v.y = y;
+        v.normalize();
+
+        let strafeDirection = new THREE.Vector3();
+        strafeDirection.crossVectors(this.camera.up, v).normalize();
+
+        for (let action in this.actions) {
+            if (this.actions[action]) {
+                switch (action) {
+                    case 'w':
+                        this.move(v.multiplyScalar(this.speed));
+                        break;
+                    case 's':
+                        this.move(v.multiplyScalar(-this.speed));
+                        break;
+                    case 'a':
+                        this.move(strafeDirection.multiplyScalar(this.speed));
+                        break;
+                    case 'd':
+                        this.move(strafeDirection.multiplyScalar(-this.speed));
+                        break;
+                    case 'arrowleft':
+                        this.rotate(Math.PI / 11);
+                        break;
+                    case 'arrowright':
+                        this.rotate(-Math.PI / 11);
+                        break;
+                }
+            }
+        }
         for (let which in this.animations) {
             if (this.animations[which] && this.animations[which].speedFactor) {
                 const action = this.animations[which].action;
@@ -208,6 +256,7 @@ export class User extends MapSite {
             }
         }
         this.animationMixer.update(0.016); // Update animation mixer every frame (~60 FPS)
+        this.activity.next(this);
     }
 
 }

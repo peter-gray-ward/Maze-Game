@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { User } from '../models/user';
 
 
@@ -9,8 +9,8 @@ import { User } from '../models/user';
 export class Game {
 	scene!: THREE.Scene;
   	renderer!: THREE.WebGLRenderer;
-  	user!: User;
   	actors: any[] = [];
+  	user!: User;
 
 	init(user: User) {
 		this.user = user;
@@ -25,7 +25,7 @@ export class Game {
 
 		this.scene.add(this.user.model.scene);
       	console.log("🧍 User model loaded", this.user);
-
+      	
 		this.animate();
 	}
 

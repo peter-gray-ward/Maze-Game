@@ -34,7 +34,7 @@ export class Room extends MapSite {
             .width(this.width)
             .height(12)
             .depth(this.depth)
-            .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
+            .color('transparent')
             .text("I'm a floor!")
             .build();
         this.floor.Build();
@@ -53,7 +53,7 @@ export class Room extends MapSite {
             .depth(this.depth)
             .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
             .text("I'm a light!")
-            .light(new THREE.AmbientLight(0xffffff, 0.5))
+            .light(new THREE.AmbientLight(0xffffff, 0.1))
             .build()
         );
 

@@ -9,8 +9,7 @@ import { Wall } from './models/wall';
 import { DirectionType, Direction, OppositeDirection } from './constants/direction';
 import { RoomComponent } from './components/room/room.component';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { User, GLTFModel } from './models/user';
+import { User } from './models/user';
 import { Game } from './singletons/game';
 
 @Component({
@@ -24,41 +23,41 @@ export class MazeComponent {
   title: string = "maze";
   dimensions: number = 23;
   wallWidth: string = "0.15rem";
-  maze: IMaze = {
-    rooms: [],
-    outside: null,
-    dimensions: this.dimensions
-  };
+  maze: Maze;
   toggle: any = {
     map: false
   };
   user!: User;
+  userPosition: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
+  userAnimations: any = [];
+  userActions: string[] = [];
   game: Game = inject(Game);
 
   constructor() {
     this.maze = new Maze(this.game, this.dimensions);
+    this.user = new User(
+        this.game,
+        [Infinity],
+        new THREE.Vector3(0, 0, 0),
+        -1, -1, -1,
+        "peach",
+        "User"
+    );
   }
 
   ngOnInit() {
-    new GLTFLoader().load("/Xbot.glb", model => {
-      const user: User = new User(
-          this.game, 
-          [0], 
-          new THREE.Vector3(0, 0, 0), 
-          1.5,  // width
-          2,    // height
-          1.5,  // depth
-          model,
-          "blue", 
-          "Player Character"
-      );
-
-      user.camera.near = 0.1; 
-      user.camera.far = 10000;
-
-      this.game.init(user);
+    this.user.loaded.subscribe((user: User) => {
+      this.user.activity.subscribe((user: User) => {
+        this.userPosition.copy(user.model.scene.position.clone());
+        this.userAnimations = Object.keys(user.animations)
+          .filter(animation => user.animations[animation] && user.animations[animation].speedFactor);
+        this.userActions = Object.keys(user.actions)
+          .filter(action => user.actions[action]);
+      });
       this.generateMaze();
       this.build3DMaze();
+      this.maze.init(user);
+      this.game.init(user);
     });
   }
 

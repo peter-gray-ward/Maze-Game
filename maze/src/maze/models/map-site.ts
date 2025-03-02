@@ -101,6 +101,7 @@ export abstract class MapSite {
 
     Remove() {
         if (this.active) {
+            console.log("removing room")
             for (let child of this.scene.children) {
                 this.game.scene.remove(child);
             }

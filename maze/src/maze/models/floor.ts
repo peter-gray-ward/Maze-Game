@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { MapSite } from './map-site';
 import { Game } from '../singletons/game';
 
+const floorTexture = new THREE.TextureLoader().load("/floor.jpg");
+
 export class Floor extends MapSite {
     constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
         super(game, id, position, width, height, depth, color, text);
@@ -15,14 +17,13 @@ export class Floor extends MapSite {
         const floorMesh = new THREE.Mesh(
             new THREE.BoxGeometry(this.width, 12, this.depth),
             new THREE.MeshStandardMaterial({
-                color: new THREE.Color(Math.random(), Math.random(), Math.random()),
+                map: floorTexture,
                 side: THREE.DoubleSide,
                 wireframe: false
             })
         );
         floorMesh.receiveShadow = true;
         floorMesh.position.copy(this.position);
-        console.log(floorMesh)
         this.scene.add(floorMesh);
     }
 
