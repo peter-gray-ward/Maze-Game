@@ -35,12 +35,4 @@ export class Door extends Side {
     override GetRandomTexture(): string {
         return "green";
     }
-
-    override Act() {
-        this.active = true;
-    }
-
-    override Remove() {
-        this.active = false;
-    }
 }

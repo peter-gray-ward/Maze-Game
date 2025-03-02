@@ -16,6 +16,7 @@ export class Maze {
     outside!: Room;
     dimensions!: number;
     game!: Game;
+    text: string = "The Maze";
 
     constructor(game: Game, dimensions: number) {
         this.dimensions = dimensions;
@@ -31,9 +32,10 @@ export class Maze {
             .text(`Outside`)
             .build()
 
-        const roomWidth = 2880;
-        const roomHeight = 2180;
-        const roomDepth = 2880;
+        const roomWidth = 800;
+        const roomHeight = 200;
+        const roomDepth = 800;
+
 
         for (var x = 0; x < dimensions; x++) {
             for (var y = 0; y < dimensions; y++) {
@@ -41,11 +43,11 @@ export class Maze {
                     new Room.RoomBuilder()
                         .game(this.game)
                         .id([x, y])
-                        .position(new THREE.Vector3(x * roomWidth, 0, y * roomHeight))
+                        .position(new THREE.Vector3(x * roomWidth, 0, y * roomWidth))
                         .width(roomWidth)
                         .height(roomHeight)
                         .depth(roomDepth)
-                        .color("white")
+                        .color("transparent")
                         .text(`Room (${x}, ${y})`)
                         .build()
                 );
@@ -63,7 +65,7 @@ export class Maze {
                 new Wall.WallBuilder()
                     .game(this.game)
                     .id(roomA.id.concat([Direction.North]))
-                    .position(new THREE.Vector3(x * roomWidth, 0, (y - 0.5) * roomHeight))
+                    .position(new THREE.Vector3(x * roomWidth, 0, y * roomDepth))
                     .width(roomWidth)
                     .height(roomHeight)
                     .depth(roomDepth)
@@ -76,7 +78,7 @@ export class Maze {
                 new Wall.WallBuilder()
                     .game(this.game)
                     .id(roomA.id.concat([Direction.East]))
-                    .position(new THREE.Vector3((x + 0.5) * roomWidth, 0, y * roomHeight))
+                    .position(new THREE.Vector3((x + 0.5) * roomWidth, 0, y * roomDepth))
                     .width(roomDepth)
                     .height(roomHeight)
                     .depth(roomDepth)
@@ -89,7 +91,7 @@ export class Maze {
                 new Wall.WallBuilder()
                     .game(this.game)
                     .id(roomA.id.concat([Direction.South]))
-                    .position(new THREE.Vector3(x * roomWidth, 0, (y + 0.5) * roomHeight))
+                    .position(new THREE.Vector3(x * roomWidth, 0, y * roomDepth))
                     .width(roomWidth)
                     .height(roomHeight)
                     .depth(roomDepth)
@@ -102,7 +104,7 @@ export class Maze {
                 new Wall.WallBuilder()
                     .game(this.game)
                     .id(roomA.id.concat([Direction.West]))
-                    .position(new THREE.Vector3((x - 0.5) * roomWidth, 0, y * roomHeight))
+                    .position(new THREE.Vector3((x - 0.5) * roomWidth, 0, y * roomDepth))
                     .width(roomDepth)
                     .height(roomHeight)
                     .depth(roomDepth)
@@ -130,6 +132,17 @@ export class Maze {
 
     RoomNumber(id: number[]) {
         return this.rooms.find(room => room.id.join(',') == id.join(','));
+    }
+
+    Act(): void {
+        for (let room of this.rooms) {
+            const roomNear = room.position.distanceTo(this.game.user.scene.position) < 100;
+            if (roomNear) {
+                room.Act();
+            } else {
+                room.Remove();
+            }
+        }
     }
     
 }

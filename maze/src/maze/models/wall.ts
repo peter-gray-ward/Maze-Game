@@ -36,12 +36,4 @@ export class Wall extends Side {
     override GetRandomTexture(): string {
         return "green";
     }
-
-    override Act() {
-        this.active = false;
-    }
-
-    override Remove() {
-        this.active = false;
-    }
 }

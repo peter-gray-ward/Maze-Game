@@ -2,5 +2,14 @@
   <room [room]="room"></room>
 </div>
 <div id="header">
-  <a (click)="toggleMap()">{{toggle.map ? 'Hide ' : 'Show '}}Map</a>
+  <ul>
+    <li><a (click)="toggleMap()">{{toggle.map ? 'Hide ' : 'Show '}}Map</a></li>
+    <li><p>{{ game.actors.length }} actors</p>
+      <ol>
+        @for (actor of game.actors; track actor.id) {
+          <li>{{ actor.text}}</li>
+        }
+      </ol>
+    </li>
+  </ul>
 </div>

@@ -19,14 +19,6 @@ export class Side extends MapSite {
         super(game, id, position, width, height, depth, color, text);
     }
 
-    Act() {
-        this.active = true;
-    }
-
-    Remove() {
-        this.active = false;
-    }
-
     GetRandomTexture(): string {
         return "green";
     }

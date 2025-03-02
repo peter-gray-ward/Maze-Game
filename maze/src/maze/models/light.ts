@@ -9,19 +9,12 @@ export abstract class Light extends MapSite {
 export class CeilingLight extends Light {
     constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string, light: THREE.Light) {
         super(game, id, position, width, height, depth, color, text);
-        this.light = this.light;
-    }
-
-    override Act() {
-        this.active = true;
-    }
-
-    override Remove() {
-        this.active = false;
+        this.light = light;
     }
 
     override Build() {
         super.Build();
+        this.scene.add(this.light);
     }
 
     override GetRandomTexture(): string {

@@ -88,6 +88,23 @@ export abstract class MapSite {
     }
 
     abstract GetRandomTexture(): string;
-    abstract Act(): void;
-    abstract Remove(): void;
+    
+    Act() {
+        if (!this.active) {
+            const childrenCopy = [...this.scene.children];
+            for (let child of childrenCopy) {
+                this.game.scene.add(child);
+            }
+        }
+        this.active = true;
+    }
+
+    Remove() {
+        if (this.active) {
+            for (let child of this.scene.children) {
+                this.game.scene.remove(child);
+            }
+        }
+        this.active = false;
+    }
 }

@@ -192,6 +192,9 @@ export class MazeComponent {
         if (nextRoom < path.length) {
           let roomB = path[nextRoom];
 
+          roomA.color = "rgba(0,0,0,0.25";
+          roomB.color = "rgba(0,0,0,0.25";
+
           let adjoiningColor = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`;
 
           let roomId = roomA.id.concat([direction]);
@@ -213,7 +216,7 @@ export class MazeComponent {
               .direction(direction)
               .rooms(roomA, roomB) 
               .color(adjoiningColor)
-              .text("I'm a room!")
+              .text("I'm a door!")
               .build()
           );
 
@@ -237,7 +240,7 @@ export class MazeComponent {
               .direction(OppositeDirection(direction))
               .rooms(roomB, roomA) 
               .color(adjoiningColor)
-              .text("I'm a room!")
+              .text("I'm a door!")
               .build()
           );
 
@@ -247,6 +250,8 @@ export class MazeComponent {
           currentRoom = nextRoom;
           paths.push(path);
         }
+
+        
       }
     }
 
@@ -272,18 +277,6 @@ export class MazeComponent {
     for (let room of this.maze.rooms) {
       room.Build();
     }
-  }
-
-  Act(): void {
-    for (let room of this.maze.rooms) {
-      for (let child of room.scene.children) {
-        const near = child.position.distanceTo(this.user.scene.position) < 100;
-        if (near && room.active == false) {
-          room.Act();
-        } else if (!near && room.active) {
-          room.Remove();
-        }
-      }
-    }
+    this.game.actors.push(this.maze);
   }
 }

@@ -11,23 +11,18 @@ export class Floor extends MapSite {
         return "green";
     }
 
-    override Act() {
-        this.active = true;
-    }
-
-    override Remove() {
-        this.active = false;
-    }
-
     override Build() {
         const floorMesh = new THREE.Mesh(
             new THREE.BoxGeometry(this.width, 12, this.depth),
             new THREE.MeshStandardMaterial({
-                color: new THREE.Color(Math.random(), Math.random(), Math.random())
+                color: new THREE.Color(Math.random(), Math.random(), Math.random()),
+                side: THREE.DoubleSide,
+                wireframe: false
             })
         );
         floorMesh.receiveShadow = true;
         floorMesh.position.copy(this.position);
+        console.log(floorMesh)
         this.scene.add(floorMesh);
     }
 

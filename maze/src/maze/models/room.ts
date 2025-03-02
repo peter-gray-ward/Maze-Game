@@ -8,7 +8,7 @@ import { Game } from '../singletons/game';
 
 export class Room extends MapSite {
     sides: Side[] = new Array(4).fill(null);
-    floor: Floor | null = null;
+    floor!: Floor;
     lights: Light[] = [];
 
     constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
@@ -30,26 +30,40 @@ export class Room extends MapSite {
         this.floor = new Floor.FloorBuilder()
             .game(this.game)
             .id(this.id.concat([Infinity]))
-            .position(this.position.add(new THREE.Vector3(0, this.height / 2)))
+            .position(this.position.clone().add(new THREE.Vector3(0, -this.height / 2, 0)))
             .width(this.width)
             .height(12)
             .depth(this.depth)
             .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
             .text("I'm a floor!")
             .build();
+        this.floor.Build();
 
-        const ceilingLight = new CeilingLight.LightBuilder()
+        this.scene.add(
+            this.floor.scene
+        );
+
+        this.lights.push(
+            new CeilingLight.LightBuilder()
             .game(this.game)
             .id(this.id.concat([Infinity]))
-            .position(this.position.add(new THREE.Vector3(0, -this.height / 2)))
+            .position(this.position.clone().add(new THREE.Vector3(0, -this.height / 2)))
             .width(this.width)
             .height(12)
             .depth(this.depth)
             .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
             .text("I'm a light!")
-            .build();
+            .light(new THREE.AmbientLight(0xffffff, 0.5))
+            .build()
+        );
 
-        this.lights.push(ceilingLight);
+        for (let light of this.lights) {
+            light.Build();
+            this.scene.add(
+                light.scene
+            );
+        }
+        
 
         for (let side of this.sides) {
             switch (side.direction) {
@@ -67,14 +81,6 @@ export class Room extends MapSite {
 
     override GetRandomTexture() {
         return "green";
-    }
-
-    override Act() {
-        this.active = true;
-    }
-
-    override Remove() {
-        this.active = false;
     }
 
     static RoomBuilder = class extends MapSite.MapSiteBuilder {

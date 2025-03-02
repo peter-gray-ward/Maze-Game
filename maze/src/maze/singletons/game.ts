@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Injectable } from '@angular/core';
 import { User } from '../models/user';
 
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -9,6 +10,7 @@ export class Game {
 	scene!: THREE.Scene;
   	renderer!: THREE.WebGLRenderer;
   	user!: User;
+  	actors: any[] = [];
 
 	init(user: User) {
 		this.user = user;
@@ -29,6 +31,9 @@ export class Game {
 
 	animate() {
 		this.user.Act();
+		for (let actor of this.actors) {
+			actor.Act();
+		}
 	    this.renderer.render(this.scene, this.user.camera);
 	    window.requestAnimationFrame(this.animate.bind(this));
 	 }
