@@ -41,18 +41,29 @@ export class MazeComponent {
 
   ngOnInit() {
     new GLTFLoader().load("/Xbot.glb", model => {
-      const user = new User(this.game, model);
+      const user: User = new User(
+          this.game, 
+          [0], 
+          new THREE.Vector3(0, 0, 0), 
+          1.5,  // width
+          2,    // height
+          1.5,  // depth
+          model,
+          "blue", 
+          "Player Character"
+      );
+
       user.camera.near = 0.1; 
       user.camera.far = 10000;
+
       this.game.init(user);
-      console.log("🧍 User model loaded", user);
       this.generateMaze();
       this.build3DMaze();
     });
   }
 
-  trackById(index: number, site: Room): string {
-    return site.id.join(',');
+  trackById(index: number, room: Room): string {
+    return room.id.join('-');
   }
 
   toggleMap() {
@@ -67,6 +78,9 @@ export class MazeComponent {
   generateMaze(): void {
     this.maze = new Maze(this.game, this.dimensions);
     var currentRoom = 0;
+    const roomWidth = 2880;
+    const roomDepth = 2880;
+    const roomHeight = 2000;
     var paths = [];
     const directionStrategy: DirectionType[] = Object.keys(Direction)
       .map((key: string) => Direction[key as keyof typeof Direction]); // Trending strategy
@@ -180,28 +194,50 @@ export class MazeComponent {
 
           let adjoiningColor = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`;
 
-          path[currentRoom].color = 'maroon';
-          path[currentRoom].text += `,${x++}`;
-
+          let roomId = roomA.id.concat([direction]);
           path[currentRoom].SetSide(
             direction,
             new Door.DoorBuilder()
               .game(this.game)
-              .id(roomA.id.concat([direction]))
+              .id(roomId)
+              .position(
+                new THREE.Vector3(
+                  roomId[0] * roomWidth, 
+                  0, 
+                  roomId[1] * roomHeight
+                )
+              )
+              .width(roomWidth)
+              .height(roomHeight)
+              .depth(roomDepth)
               .direction(direction)
               .rooms(roomA, roomB) 
               .color(adjoiningColor)
+              .text("I'm a room!")
               .build()
           );
 
+          const oppositeDirection = OppositeDirection(direction);
+          roomId = roomB.id.concat([oppositeDirection])
           path[nextRoom].SetSide(
-            OppositeDirection(direction),
+            oppositeDirection,
             new Door.DoorBuilder()
               .game(this.game)
-              .id(roomB.id.concat([OppositeDirection(direction)]))
+              .id(roomId)
+              .position(
+                new THREE.Vector3(
+                  roomId[0] * roomWidth, 
+                  0, 
+                  roomId[1] * roomHeight
+                )
+              )
+              .width(roomWidth)
+              .height(roomHeight)
+              .depth(roomDepth)
               .direction(OppositeDirection(direction))
               .rooms(roomB, roomA) 
               .color(adjoiningColor)
+              .text("I'm a room!")
               .build()
           );
 
@@ -212,8 +248,6 @@ export class MazeComponent {
           paths.push(path);
         }
       }
-
-      path[currentRoom].color = 'aliceblue';
     }
 
     const totalRooms = Math.pow(this.dimensions, 2);
@@ -235,11 +269,21 @@ export class MazeComponent {
   }
 
   build3DMaze(): void {
-    const roomWidth = 2880;
-    const roomDepth = 2880;
     for (let room of this.maze.rooms) {
-      const position = new THREE.Vector3(room.id[0] * 2880, room.id[1] * 2880);
-      room.Build(position, roomWidth, roomWidth * 0.7, roomDepth);
+      room.Build();
+    }
+  }
+
+  Act(): void {
+    for (let room of this.maze.rooms) {
+      for (let child of room.scene.children) {
+        const near = child.position.distanceTo(this.user.scene.position) < 100;
+        if (near && room.active == false) {
+          room.Act();
+        } else if (!near && room.active) {
+          room.Remove();
+        }
+      }
     }
   }
 }

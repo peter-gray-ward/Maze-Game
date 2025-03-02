@@ -1,42 +1,47 @@
-import { Side } from './side';
+import * as THREE from 'three';
+import { MapSite } from './map-site';
+import { Maze, IMaze } from './maze';
 import { Room } from './room';
 import { Game } from '../singletons/game';
+import { Side } from './side';
 
 export class Wall extends Side {
-    constructor(game: Game, id: number[], direction: number, roomA: Room, roomB: Room) {
-        super(game, id, direction, roomA, roomB);
+    constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string, rooms: Room[], direction: number) {
+        super(game, id, position, width, height, depth, color, text);
+        this.direction = direction;
     }
 
-    static WallBuilder = class {
-        private _game!: Game;
-        private _id!: number[];
-        private _direction!: number;
-        private _roomA!: Room;
-        private _roomB!: Room;
+    static WallBuilder = class extends MapSite.MapSiteBuilder {
+        public _direction!: number;
+        public _rooms: Room[] = [];
 
-        game(game: Game): this {
-            this._game = game;
-            return this;
-        }
-        id(id: number[]): this {
-            this._id = id;
-            return this;
-        }
         direction(direction: number): this {
             this._direction = direction;
             return this;
         }
+
         rooms(roomA: Room, roomB: Room): this {
-            this._roomA = roomA;
-            this._roomB = roomB;
+            this._rooms.push(roomA, roomB);
             return this;
         }
-        build() {
-            return new Wall(this._game, this._id, this._direction, this._roomA, this._roomB);
+
+        build(): Wall {
+            if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
+                throw new Error("Missing required properties to create a Floor.");
+            }
+            return new Wall(this._game, this._id, this._position, this._width, this._height, this._depth, this._color, this._text, this._rooms, this._direction);
         }
     }
 
     override GetRandomTexture(): string {
         return "green";
+    }
+
+    override Act() {
+        this.active = false;
+    }
+
+    override Remove() {
+        this.active = false;
     }
 }

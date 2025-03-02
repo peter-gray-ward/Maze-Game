@@ -1,16 +1,20 @@
 import * as THREE from 'three';
 import { MapSite } from './map-site';
-import { Side } from './side';
 import { Direction } from '../constants/direction';
+import { Side } from './side';
 import { Floor } from './floor';
+import { CeilingLight, Light } from './light';
 import { Game } from '../singletons/game';
 
 export class Room extends MapSite {
     sides: Side[] = new Array(4).fill(null);
+    floor: Floor | null = null;
+    lights: Light[] = [];
 
-    constructor(game: Game, id: number[]) {
-        super(game, id);
+    constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
+        super(game, id, position, width, height, depth, color, text);
     }
+
 
     SetSide(dir: number, side: Side) {
         this.sides[dir] = side;
@@ -20,40 +24,85 @@ export class Room extends MapSite {
         return this.sides[dir];
     }
 
-    override Build(position: THREE.Vector3, width: number, height: number, depth: number) {
-        super.Build(position, width, height, depth);
+    override Build() {
+        super.Build();
 
-        const floor = new THREE.Mesh(
-            new THREE.BoxGeometry(width, 12, depth),
-            new THREE.MeshStandardMaterial({
-                color: new THREE.Color(Math.random(), Math.random(), Math.random())
-            })
-        );
-        floor.receiveShadow = true;
-        floor.position.copy(this.scene.position);
-        console.log(this.game.scene, floor)
-        this.game.scene.add(floor);
+        this.floor = new Floor.FloorBuilder()
+            .game(this.game)
+            .id(this.id.concat([Infinity]))
+            .position(this.position.add(new THREE.Vector3(0, this.height / 2)))
+            .width(this.width)
+            .height(12)
+            .depth(this.depth)
+            .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
+            .text("I'm a floor!")
+            .build();
 
-        for (var side of this.sides) {
+        const ceilingLight = new CeilingLight.LightBuilder()
+            .game(this.game)
+            .id(this.id.concat([Infinity]))
+            .position(this.position.add(new THREE.Vector3(0, -this.height / 2)))
+            .width(this.width)
+            .height(12)
+            .depth(this.depth)
+            .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
+            .text("I'm a light!")
+            .build();
+
+        this.lights.push(ceilingLight);
+
+        for (let side of this.sides) {
             switch (side.direction) {
                 case Direction.North:
-
                     break;
                 case Direction.South:
-
                     break;
                 case Direction.East:
-
                     break;
                 case Direction.West:
-
                     break;
             }
         }
     }
 
-
-    GetRandomTexture() {
+    override GetRandomTexture() {
         return "green";
     }
+
+    override Act() {
+        this.active = true;
+    }
+
+    override Remove() {
+        this.active = false;
+    }
+
+    static RoomBuilder = class extends MapSite.MapSiteBuilder {
+        private _sides: Side[] = [];
+        private _floor!: Floor;
+        private _lights: Light[] = [];
+
+        sides(sides: Side[]): this {
+            this._sides = sides;
+            return this;
+        }
+
+        floor(floor: Floor): this {
+            this._floor = floor;
+            return this;
+        }
+
+        lights(lights: Light[]): this {
+            this._lights = lights;
+            return this;
+        }
+
+        build(): Room {
+            if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
+                throw new Error("Missing required properties to create a Floor.");
+            }
+            return new Room(this._game, this._id, this._position, this._width, this._height, this._depth, this._color, this._text);
+        }
+    }
+
 }

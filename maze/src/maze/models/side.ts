@@ -1,16 +1,33 @@
 import { MapSite } from './map-site';
 import { Room } from './room';
 import { Game } from '../singletons/game';
+import * as THREE from 'three';
 
-export abstract class Side extends MapSite {
-    roomA: Room;
-    roomB: Room;
-    direction: number;
+export class Side extends MapSite {
+    public direction!: number;
+    public rooms: Room[] = [];
+    
+    public getActive(): boolean {
+        return this.active;
+    }
 
-    constructor(game: Game, id: number[], direction: number, roomA: Room, roomB: Room) {
-        super(game, id);
-        this.direction = direction;
-        this.roomA = roomA;
-        this.roomB = roomB;
+    public setActive(active: boolean): void {
+        this.active = active;
+    }
+
+    constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
+        super(game, id, position, width, height, depth, color, text);
+    }
+
+    Act() {
+        this.active = true;
+    }
+
+    Remove() {
+        this.active = false;
+    }
+
+    GetRandomTexture(): string {
+        return "green";
     }
 }

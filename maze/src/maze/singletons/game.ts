@@ -18,11 +18,17 @@ export class Game {
 		this.renderer.shadowMap.enabled = true;
 		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 		this.renderer.domElement.id = "view";
+
 		document.body.appendChild(this.renderer.domElement);
+
+		this.scene.add(this.user.model.scene);
+      	console.log("🧍 User model loaded", this.user);
+
 		this.animate();
 	}
 
 	animate() {
+		this.user.Act();
 	    this.renderer.render(this.scene, this.user.camera);
 	    window.requestAnimationFrame(this.animate.bind(this));
 	 }
