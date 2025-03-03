@@ -1,8 +1,11 @@
-import * as THREE from 'three';
+import * as THREE from "three";
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { MapSite } from './map-site';
 import { Direction } from '../constants/direction';
 import { Side } from './side';
 import { Floor } from './floor';
+import { Door } from './door';
 import { Wall } from './wall';
 import { CeilingLight, Light } from './light';
 import { Game } from '../singletons/game';
@@ -26,6 +29,8 @@ export class Room extends MapSite {
     }
 
     override Build() {
+        if (!this.sides.find(side => side instanceof Door)) return;
+
         super.Build();
 
 
@@ -65,36 +70,73 @@ export class Room extends MapSite {
         }
         
 
-        for (let side of this.sides) {
-            const wall = new Wall.WallBuilder()
-                .game(this.game)
-                .id(this.id.concat([side.direction]))
-                .position(this.position.clone())
-                .width(this.width)
-                .height(this.height)
-                .depth(12)
-                .color('white')
-                .text("I'm a wall!")
-                .build();
-            wall.Build();
-            switch (side.direction) {
-                case Direction.North:
-                    wall.scene.translateZ(this.depth / 2);
-                    break;
-                case Direction.South:
-                    wall.scene.translateZ(-this.depth / 2);
-                    break;
+        console.log(this.sides.length)
+
+        for (let s of this.sides) {
+            let side: Side = s instanceof Wall ? 
+                new Wall.WallBuilder()
+                    .game(this.game)
+                    .id(this.id.concat([s.direction]))
+                    .position(this.position.clone())
+                    .width(this.width)
+                    .height(this.height)
+                    .depth(12)
+                    .color('white')
+                    .text("I'm a wall!")
+                    .build()
+                : new Door.DoorBuilder()
+                    .game(this.game)
+                    .id(this.id.concat([s.direction]))
+                    .position(this.position.clone())
+                    .width(this.width)
+                    .height(this.height)
+                    .depth(12)
+                    .color(s.color)
+                    .text("I'm a door!")
+                    .build()
+
+            side.Build();
+            switch (s.direction) {
                 case Direction.East:
-                    wall.scene.translateX(-this.width / 2);
-                    wall.scene.rotateY(Math.PI / 2);
+                    side.scene.translateZ(this.depth / 2);
                     break;
                 case Direction.West:
-                    wall.scene.translateX(this.width / 2);
-                    wall.scene.rotateY(-Math.PI / 2);
+                    side.scene.translateZ(-this.depth / 2);
+                    break;
+                case Direction.North:
+                    side.scene.translateX(-this.width / 2);
+                    side.scene.rotateY(Math.PI / 2);
+                    break;
+                case Direction.South:
+                    side.scene.translateX(this.width / 2);
+                    side.scene.rotateY(-Math.PI / 2);
                     break;
             }
-            this.scene.add(wall.scene);
+            this.scene.add(side.scene);
         }
+
+
+
+        const boardGeometry = new THREE.BoxGeometry(30, 10.5, 0.5);
+        const boardMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
+        const board = new THREE.Mesh(boardGeometry, boardMaterial);
+        board.position.copy(this.position.clone().add(new THREE.Vector3(0, -this.height / 2, 0)));
+        this.scene.add(board);
+
+        const loader = new FontLoader();
+        loader.load("/helvetica.json", (font) => {
+            const textGeometry = new TextGeometry(this.id.join('-'), {
+                font: font,
+                depth: 10
+            });
+
+            const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.copy(this.position.clone().add(new THREE.Vector3(0, -this.height / 2, 0))); // Adjust position above board
+            textMesh.rotation.y = Math.random() * Math.PI * 2;
+
+            this.scene.add(textMesh);
+        });
     }
 
     override GetRandomTexture() {

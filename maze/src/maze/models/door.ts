@@ -13,6 +13,22 @@ export class Door extends Side {
         this.direction = direction;
     }
 
+    override Build(): void {
+        super.Build();
+        let color: number[] = this.color.replace('rgb(','').replace(')','').split(',').map(str => +str.trim() / 255);
+        const door = new THREE.Mesh(
+            new THREE.BoxGeometry(this.width, this.height, this.depth),
+            new THREE.MeshStandardMaterial({
+                color: new THREE.Color(color[0], color[1], color[2]),
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide
+            })
+        );
+        door.position.copy(this.position);
+        this.scene = door;
+    }
+
     static DoorBuilder = class extends MapSite.MapSiteBuilder {
         public _rooms: Room[] = [];
         public _direction!: number;

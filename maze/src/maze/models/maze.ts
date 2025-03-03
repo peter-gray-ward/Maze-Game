@@ -141,7 +141,7 @@ export class Maze {
     }
 
     Act(): void {
-        const threshold = this.roomWidth// * 1.5;
+        const threshold = this.roomWidth * 2;
         for (let room of this.rooms) {
             const roomNear = room.position.distanceTo(this.userPosition) < threshold;
             if (roomNear) {

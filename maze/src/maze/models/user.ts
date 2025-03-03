@@ -15,10 +15,18 @@ export interface GLTFModel {
 	userData: any;
 }
 
+export interface UserPosition {
+    x: number;
+    y: number;
+    z: number;
+    left: number;
+    top: number;
+}
+
 export class User extends MapSite {
     model!: GLTFModel;
     camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-    speed: number = 12;
+    speed: number = 120;
     animationMixer!: THREE.AnimationMixer;
     animations: any = {
         walk: null,
@@ -94,7 +102,7 @@ export class User extends MapSite {
     }
 
     private rotate(dir: number): void {
-        this.model.scene.rotateY(dir * 0.1);
+        this.model.scene.rotateY(dir * 0.3);
     }
 
 

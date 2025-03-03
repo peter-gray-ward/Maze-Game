@@ -1,5 +1,5 @@
 html {
-    
+    --dimensions: 23;
 }
 html, body {
     width: 100vw;
@@ -7,6 +7,7 @@ html, body {
     box-sizing: border-box;
     padding: 0;
     margin: 0;
+    overflow: hidden;
     canvas {
         width: 100vw;
         height: 100vw;
@@ -17,6 +18,8 @@ html, body {
     }
 }
 maze-root {
+    width: calc(min(100vw, 100vh));
+    height: calc(min(100vw, 100vh));
     border-left: 1px solid;
     border-bottom: 1px solid;
     display: flex;

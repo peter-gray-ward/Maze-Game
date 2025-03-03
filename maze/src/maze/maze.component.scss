@@ -1,21 +1,74 @@
+@keyframes pulse {
+    0% {
+        width: 0.95rem;
+        height: 0.95rem;
+    }
+    100% {
+        width: 1.05rem;
+        height: 1.05rem;
+    }
+}
+
+#user-position-marker {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    background: blue;
+    border-radius: 100%;
+    left: 0;
+    top: 0;
+    animation: .5s infinite alternate pulse;
+}
+
 #header {
     position: absolute;
     left: 0;
     top: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: start;
+    align-items: start;
+    justify-content: center;
     color: white;
     font-family: Andale Mono;
     padding: 0.2rem;
     box-sizing: border-box;
     z-index: 2;
+    width: 10rem;
+    height: 10rem;
+    border-radius: 100%;
+    left: calc(100% - 7.5rem);
+    top: -2.5rem;
+    background: maroon;
+    overflow: hidden;
 
-    a {
-        &:hover {
-            cursor: pointer;
-            color: #EBEDEF;
+    div {
+        display: flex;
+        align-items: space-around;
+        padding: 0.25rem 0.25rem 0.25rem 0.85rem;
+        &:first-of-type {
+            margin-top: -1rem;
+        }
+        #map-icon {
+            width: 2rem;
+            height: 1rem;
+            background: url(/map.png);
+            background-size: contain;
+            background-repeat: no-repeat;
+            margin-right: -0.5rem;
+        }
+        a {
+            text-align: left;
+            font-size: 0.8rem;
+            text-indent: 0.25rem;
+            &:hover {
+                cursor: pointer;
+                color: #EBEDEF;
+            }
+        }
+        span {
+            color: white;
         }
     }
+
+    
 }

@@ -1,8 +1,15 @@
 <div *ngFor="let room of maze.rooms; trackBy: trackById">
   <room [room]="room"></room>
 </div>
+<i *ngIf="userPosition()" id="user-position-marker" 
+  [style.left.px]="userPosition().left" 
+  [style.top.px]="userPosition().top"></i>
 <div id="header">
-  <div><a (click)="toggleMap()">{{toggle.map ? 'Hide ' : 'Show '}}Map</a></div>
-  <div>{{ userPosition.x }}, {{ userPosition.z }}</div>
-  <div>{{ userAnimations.join(", ") }}</div>
+  <div>
+    <span id="map-icon"></span>
+    <a (click)="toggleMap()">{{toggle.map ? 'Hide ' : 'Show '}}Map</a>
+  </div>
+  <div>
+    <span [style.font-size.px]="10">{{ userPosition().x.toFixed(1) }}, {{ userPosition().z.toFixed(1) }}</span>
+  </div>
 </div>

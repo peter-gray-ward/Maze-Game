@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MapSite } from './models/map-site';
@@ -9,7 +9,7 @@ import { Wall } from './models/wall';
 import { DirectionType, Direction, OppositeDirection } from './constants/direction';
 import { RoomComponent } from './components/room/room.component';
 import * as THREE from 'three';
-import { User } from './models/user';
+import { User, UserPosition } from './models/user';
 import { Game } from './singletons/game';
 
 @Component({
@@ -28,7 +28,7 @@ export class MazeComponent {
     map: false
   };
   user!: User;
-  userPosition: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
+  userPosition = signal({ x: 0, y: 0, z: 0, left: 0, top: 0 });
   userAnimations: any = [];
   userActions: string[] = [];
   game: Game = inject(Game);
@@ -48,7 +48,14 @@ export class MazeComponent {
   ngOnInit() {
     this.user.loaded.subscribe((user: User) => {
       this.user.activity.subscribe((user: User) => {
-        this.userPosition.copy(user.model.scene.position.clone());
+        this.userPosition.update(pos => ({
+          ...pos,
+          x: user.model.scene.position.x,
+          y: user.model.scene.position.y,
+          z: user.model.scene.position.z,
+          left: Math.min(window.innerWidth, window.innerHeight) * (user.model.scene.position.z / (this.maze.dimensions * this.maze.roomWidth)),
+          top: Math.min(window.innerWidth, window.innerHeight) * (user.model.scene.position.x / (this.maze.dimensions * this.maze.roomDepth))
+        }));
         this.userAnimations = Object.keys(user.animations)
           .filter(animation => user.animations[animation] && user.animations[animation].speedFactor);
         this.userActions = Object.keys(user.actions)
@@ -191,10 +198,10 @@ export class MazeComponent {
         if (nextRoom < path.length) {
           let roomB = path[nextRoom];
 
-          roomA.color = "rgba(0,0,0,0.25";
-          roomB.color = "rgba(0,0,0,0.25";
+          roomA.color = "rgb(0,0,0)";
+          roomB.color = "rgb(0,0,0)";
 
-          let adjoiningColor = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`;
+          let adjoiningColor = `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`;
 
           let roomId = roomA.id.concat([direction]);
           path[currentRoom].SetSide(

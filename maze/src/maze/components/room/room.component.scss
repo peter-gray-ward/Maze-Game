@@ -2,8 +2,8 @@
     --dimensions: 23;
     --wall-width: 0.15rem;
 
-    width: calc(100vw / var(--dimensions) - 1px);
-    height: calc(100vh / var(--dimensions) - 1px);
+    width: calc(min(100vw, 100vh) / var(--dimensions));
+    height: calc(min(100vw, 100vh) / var(--dimensions));
     margin: 0;
     box-sizing: border-box;
     border-top: 1px solid;

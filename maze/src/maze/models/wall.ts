@@ -20,6 +20,7 @@ export class Wall extends Side {
             new THREE.BoxGeometry(this.width, this.height, this.depth),
             new THREE.MeshStandardMaterial({
                 map: wallpaper,
+                wireframe: true,
                 side: THREE.DoubleSide
             })
         );
