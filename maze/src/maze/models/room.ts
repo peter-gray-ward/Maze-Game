@@ -75,8 +75,6 @@ export class Room extends MapSite {
         }
         
 
-        console.log(this.sides.length)
-
         for (let s of this.sides) {
             let side: Side = s instanceof Wall ? 
                 new Wall.WallBuilder()
@@ -109,16 +107,18 @@ export class Room extends MapSite {
                     side.scene.translateZ(-this.depth / 2);
                     break;
                 case Direction.South:
-                    side.scene.translateX(-this.width / 2);
+                    side.scene.translateX(this.width / 2);
                     side.scene.rotateY(Math.PI / 2);
                     break;
                 case Direction.North:
-                    side.scene.translateX(this.width / 2);
-                    side.scene.rotateY(Math.PI * 1.5);
+                    side.scene.translateX(-this.width / 2);
+                    side.scene.rotateY(Math.PI / 2);
+                    break;
+                default:
                     break;
             }
             
-            if (side instanceof Door) this.scene.add(side.scene);
+            this.scene.add(side.scene);
         }
 
 

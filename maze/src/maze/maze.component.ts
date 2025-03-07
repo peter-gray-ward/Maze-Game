@@ -47,15 +47,29 @@ export class MazeComponent {
   }
 
   ngOnInit() {
+    const mazeWidth = this.maze.dimensions * this.maze.roomDepth;
+    const mazeHeight = this.maze.dimensions * this.maze.roomDepth;
+    const halfRoomWidth = this.maze.roomWidth / 2;
     this.user.loaded.subscribe((user: User) => {
       this.user.activity.subscribe((user: User) => {
+        const mazeWidthPx = Math.min(window.innerWidth, window.innerHeight);
+        const roomWidthPx = mazeWidthPx / this.maze.dimensions;
+        const halfRoomWidthPx = roomWidthPx / 2;
         this.userPosition.update(pos => ({
           ...pos,
           x: user.model.scene.position.x,
           y: user.model.scene.position.y,
           z: user.model.scene.position.z,
-          left: Math.min(window.innerWidth, window.innerHeight) * (user.model.scene.position.z / (this.maze.dimensions * this.maze.roomWidth)),
-          top: Math.min(window.innerWidth, window.innerHeight) * (user.model.scene.position.x / (this.maze.dimensions * this.maze.roomDepth))
+          left: mazeWidthPx
+                * (
+                  user.model.scene.position.z 
+                  / mazeWidth
+                ) + halfRoomWidthPx - 7.75,
+          top: mazeWidthPx
+               * (
+                  user.model.scene.position.x 
+                  / mazeHeight
+               ) + halfRoomWidthPx - 7.75
         }));
         this.userAnimations = Object.keys(user.animations)
           .filter(animation => user.animations[animation] && user.animations[animation].speedFactor);
@@ -63,9 +77,9 @@ export class MazeComponent {
           .filter(action => user.actions[action]);
       });
       this.generateMaze();
-      // this.build3DMaze();
-      // this.maze.init(user);
-      // this.game.init(user);
+      this.build3DMaze();
+      this.maze.init(user);
+      this.game.init(user);
     });
   }
 

@@ -6,7 +6,7 @@ import { Game } from '../singletons/game';
 import { Side } from './side';
 import { DirectionType } from '../constants/direction';
 
-const wallpaper = new THREE.TextureLoader().load("/wallpaper.webp", texture => {
+const wallpaper = new THREE.TextureLoader().load("/floor.jpg", texture => {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(5, 5);
@@ -22,14 +22,16 @@ export class Wall extends Side {
     override Build(): void {
         super.Build();
         const wall = new THREE.Mesh(
-            // new THREE.BoxGeometry(this.width, this.height, this.depth),
-            new THREE.SphereGeometry(this.width / 5, 10, 10),
-            new THREE.MeshBasicMaterial({
+            new THREE.BoxGeometry(this.width, this.height, this.depth),
+            new THREE.MeshStandardMaterial({
                 map: wallpaper,
+                color: 'white',
                 // wireframe: true,
                 side: THREE.DoubleSide
             })
         );
+        wall.receiveShadow = true;
+        wall.castShadow = true;
         wall.position.copy(this.position);
         this.scene = wall;
     }

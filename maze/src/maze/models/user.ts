@@ -26,7 +26,8 @@ export interface UserPosition {
 export class User extends MapSite {
     model!: GLTFModel;
     camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-    speed: number = 300;
+    speed: number = 20;
+    rotationSpeed: number = Math.PI / 11;
     animationMixer!: THREE.AnimationMixer;
     animations: any = {
         walk: null,
@@ -217,10 +218,10 @@ export class User extends MapSite {
                 speedFactor = 5;
                 break;
             case 'walk':
-                speedFactor = 3;
+                speedFactor = 2.5;
                 break;
             case 'strafe':
-                speedFactor = 3; 
+                speedFactor = 2.5; 
                 break;
             case 'lounge':
                 speedFactor = 0.001;
@@ -268,10 +269,10 @@ export class User extends MapSite {
                         this.move(strafeDirection.clone().multiplyScalar(-this.speed));
                         break;
                     case 'arrowleft':
-                        this.rotate(Math.PI / 11);
+                        this.rotate(this.rotationSpeed);
                         break;
                     case 'arrowright':
-                        this.rotate(-Math.PI / 11);
+                        this.rotate(-this.rotationSpeed);
                         break;
                 }
             }
