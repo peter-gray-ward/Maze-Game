@@ -2,9 +2,10 @@ import { MapSite } from './map-site';
 import { Room } from './room';
 import { Game } from '../singletons/game';
 import * as THREE from 'three';
+import { DirectionType } from '../constants/direction';
 
 export class Side extends MapSite {
-    public direction!: number;
+    public direction!: DirectionType;
     public rooms: Room[] = [];
     
     public getActive(): boolean {

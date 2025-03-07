@@ -26,7 +26,7 @@ export interface UserPosition {
 export class User extends MapSite {
     model!: GLTFModel;
     camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-    speed: number = 120;
+    speed: number = 300;
     animationMixer!: THREE.AnimationMixer;
     animations: any = {
         walk: null,
@@ -217,10 +217,10 @@ export class User extends MapSite {
                 speedFactor = 5;
                 break;
             case 'walk':
-                speedFactor = 1;
+                speedFactor = 3;
                 break;
             case 'strafe':
-                speedFactor = 1; 
+                speedFactor = 3; 
                 break;
             case 'lounge':
                 speedFactor = 0.001;

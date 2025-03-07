@@ -75,7 +75,7 @@ export class Maze {
                     .depth(this.roomDepth)
                     .direction(Direction.North)
                     .rooms(roomA, this.getAdjacentRoom(x, y - 1))
-                    .color("gray")
+                    .color("white")
                     .text("North Wall")
                     .build() as Side,
 
@@ -88,7 +88,7 @@ export class Maze {
                     .depth(this.roomDepth)
                     .direction(Direction.East)
                     .rooms(roomA, this.getAdjacentRoom(x + 1, y))
-                    .color("gray")
+                    .color("white")
                     .text("East Wall")
                     .build() as Side,
 
@@ -101,7 +101,7 @@ export class Maze {
                     .depth(this.roomDepth)
                     .direction(Direction.South)
                     .rooms(roomA, this.getAdjacentRoom(x, y + 1))
-                    .color("gray")
+                    .color("white")
                     .text("South Wall")
                     .build() as Side,
 
@@ -114,7 +114,7 @@ export class Maze {
                     .depth(this.roomDepth)
                     .direction(Direction.West)
                     .rooms(roomA, this.getAdjacentRoom(x - 1, y))
-                    .color("gray")
+                    .color("white")
                     .text("West Wall")
                     .build() as Side
             ];

@@ -2,7 +2,11 @@ import * as THREE from 'three';
 import { MapSite } from './map-site';
 import { Game } from '../singletons/game';
 
-const floorTexture = new THREE.TextureLoader().load("/floor.jpg");
+const floorTexture = new THREE.TextureLoader().load("/floor.jpg", texture => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(11, 11);
+});
 
 export class Floor extends MapSite {
     constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {

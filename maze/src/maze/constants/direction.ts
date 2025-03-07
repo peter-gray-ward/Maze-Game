@@ -24,3 +24,11 @@ export const OppositeDirection = (dir: DirectionType): DirectionType => { // Spe
         default: return 0; // Handle invalid direction
     }
 }
+
+export const OtherDirections = (dir: DirectionType): DirectionType[] => {
+    if (dir == Direction.North) return [Direction.South, Direction.East, Direction.West];
+    if (dir == Direction.South) return [Direction.North, Direction.East, Direction.West];
+    if (dir == Direction.East) return [Direction.South, Direction.North, Direction.West];
+    if (dir == Direction.West) return [Direction.South, Direction.East, Direction.North];
+    return [];
+}

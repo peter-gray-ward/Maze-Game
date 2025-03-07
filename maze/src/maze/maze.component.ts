@@ -6,11 +6,12 @@ import { Maze, IMaze } from './models/maze';
 import { Room } from './models/room';
 import { Door } from './models/door';
 import { Wall } from './models/wall';
-import { DirectionType, Direction, OppositeDirection } from './constants/direction';
+import { DirectionType, Direction, OppositeDirection, OtherDirections } from './constants/direction';
 import { RoomComponent } from './components/room/room.component';
 import * as THREE from 'three';
 import { User, UserPosition } from './models/user';
 import { Game } from './singletons/game';
+import { KeyOf } from './utils/object';
 
 @Component({
   selector: 'maze-root',
@@ -21,7 +22,7 @@ import { Game } from './singletons/game';
 })
 export class MazeComponent {
   title: string = "maze";
-  dimensions: number = 23;
+  dimensions: number = 12;
   wallWidth: string = "0.15rem";
   maze: Maze;
   toggle: any = {
@@ -62,9 +63,9 @@ export class MazeComponent {
           .filter(action => user.actions[action]);
       });
       this.generateMaze();
-      this.build3DMaze();
-      this.maze.init(user);
-      this.game.init(user);
+      // this.build3DMaze();
+      // this.maze.init(user);
+      // this.game.init(user);
     });
   }
 
@@ -83,6 +84,7 @@ export class MazeComponent {
 
   generateMaze(): void {
     this.maze = new Maze(this.game, this.dimensions);
+
     var currentRoom = 0;
     const roomWidth = 2880;
     const roomDepth = 2880;
@@ -192,6 +194,8 @@ export class MazeComponent {
             }
             break;
         }
+
+        console.log(currentRoom, KeyOf(Direction, direction), nextRoom)
         
 
         // Check if nextRoom is valid before accessing roomB
@@ -201,7 +205,6 @@ export class MazeComponent {
           roomA.color = "rgb(0,0,0)";
           roomB.color = "rgb(0,0,0)";
 
-          let adjoiningColor = `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`;
 
           let roomId = roomA.id.concat([direction]);
           path[currentRoom].SetSide(
@@ -213,18 +216,30 @@ export class MazeComponent {
                 new THREE.Vector3(
                   roomId[0] * roomWidth, 
                   0, 
-                  roomId[1] * roomHeight
+                  roomId[1] * roomDepth
                 )
               )
               .width(roomWidth)
               .height(roomHeight)
               .depth(roomDepth)
-              .direction(direction)
+              .direction(direction as DirectionType)
               .rooms(roomA, roomB) 
-              .color(adjoiningColor)
+              .color('red')
               .text("I'm a door!")
               .build()
           );
+
+
+
+          path[currentRoom].visited = true;
+          console.log(path[currentRoom])
+
+          for (let dir of OtherDirections(direction)) {
+            let s = path[currentRoom].sides.filter(s => s.direction == dir)[0];
+            if (s instanceof Wall) {
+              s.color = 'blue';
+            }
+          }
 
           const oppositeDirection = OppositeDirection(direction);
           roomId = roomB.id.concat([oppositeDirection])
@@ -237,15 +252,15 @@ export class MazeComponent {
                 new THREE.Vector3(
                   roomId[0] * roomWidth, 
                   0, 
-                  roomId[1] * roomHeight
+                  roomId[1] * roomDepth
                 )
               )
               .width(roomWidth)
               .height(roomHeight)
               .depth(roomDepth)
-              .direction(OppositeDirection(direction))
+              .direction(OppositeDirection(direction) as DirectionType)
               .rooms(roomB, roomA) 
-              .color(adjoiningColor)
+              .color('purple')
               .text("I'm a door!")
               .build()
           );
@@ -266,17 +281,17 @@ export class MazeComponent {
       return this.generateMaze();
     }
 
-    for (var path of paths) {
-      for (var i = 0; i < path.length; i++) {
-        for (var j = 0; j < this.maze.rooms[i].sides.length; j++) {
-          if (path[i].sides[j] instanceof Door && !(this.maze.rooms[i].sides[j] instanceof Door)) {
-            this.maze.rooms[i].sides[j] = path[i].sides[j];
-          }
-        }
-        this.maze.rooms[i] = path[i];
-      }
-    }
-    console.log("Finished creating the maze path");
+    // for (var path of paths) {
+    //   for (var i = 0; i < path.length; i++) {
+    //     for (var j = 0; j < this.maze.rooms[i].sides.length; j++) {
+    //       if (path[i].sides[j] instanceof Door && this.maze.rooms[i].sides[j] instanceof Wall) {
+    //         this.maze.rooms[i].sides[j] = path[i].sides[j];
+    //       }
+    //     }
+    //     this.maze.rooms[i] = path[i];
+    //   }
+    // }
+    console.log("Finished creating the maze path", this.maze);
   }
 
   build3DMaze(): void {

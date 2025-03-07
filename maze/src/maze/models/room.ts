@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { MapSite } from './map-site';
-import { Direction } from '../constants/direction';
+import { Direction, DirectionType } from '../constants/direction';
 import { Side } from './side';
 import { Floor } from './floor';
 import { Door } from './door';
@@ -14,14 +14,19 @@ export class Room extends MapSite {
     sides: Side[] = new Array(4).fill(null);
     floor!: Floor;
     lights: Light[] = [];
+    visited: boolean = false;
 
     constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
         super(game, id, position, width, height, depth, color, text);
     }
 
 
-    SetSide(dir: number, side: Side) {
-        this.sides[dir] = side;
+    SetSide(dir: DirectionType, side: Side) {
+        for (let i = 0; i < this.sides.length; i++) {
+            if (this.sides[i].direction == dir) {
+                this.sides[i] = side;
+            }
+        }
     }
 
     GetSide(dir: number) {
@@ -41,7 +46,7 @@ export class Room extends MapSite {
             .width(this.width)
             .height(12)
             .depth(this.depth)
-            .color('white')
+            .color('blue')
             .text("I'm a floor!")
             .build();
         this.floor.Build();
@@ -81,7 +86,7 @@ export class Room extends MapSite {
                     .width(this.width)
                     .height(this.height)
                     .depth(12)
-                    .color('white')
+                    .color('blue')
                     .text("I'm a wall!")
                     .build()
                 : new Door.DoorBuilder()
@@ -103,16 +108,17 @@ export class Room extends MapSite {
                 case Direction.West:
                     side.scene.translateZ(-this.depth / 2);
                     break;
-                case Direction.North:
+                case Direction.South:
                     side.scene.translateX(-this.width / 2);
                     side.scene.rotateY(Math.PI / 2);
                     break;
-                case Direction.South:
+                case Direction.North:
                     side.scene.translateX(this.width / 2);
-                    side.scene.rotateY(-Math.PI / 2);
+                    side.scene.rotateY(Math.PI * 1.5);
                     break;
             }
-            this.scene.add(side.scene);
+            
+            if (side instanceof Door) this.scene.add(side.scene);
         }
 
 
