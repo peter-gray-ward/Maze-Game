@@ -1,18 +1,25 @@
 import * as THREE from 'three';
 import { Game } from '../singletons/game';
+import { GRAVITY } from '../constants/direction';
 
 export abstract class MapSite {
     public color: string = "transparent";
     public text: string = "";
     public id: number[] = [];
     public scene: THREE.Group | THREE.Mesh = new THREE.Group();
-    public box: THREE.Box3 | null = null;
+    public children: MapSite[] = [];
+    public box!: THREE.Box3;
     public game: Game;
     public active: boolean = false;
     public width!: number;
     public height!: number;
     public depth!: number;
     public position!: THREE.Vector3;
+    public velocity: any = {
+        x: 0,
+        y: GRAVITY,
+        z: 0
+    };
 
     constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
         this.game = game;
@@ -77,8 +84,7 @@ export abstract class MapSite {
     };
 
     Build() {
-        this.scene.position.set(this.position.x, this.position.y, this.position.z);
-        if (this.box == null) {
+        if (!this.box) {
             this.box = new THREE.Box3(
                 new THREE.Vector3(this.width / 2, this.height / 2, this.depth / 2),
                 new THREE.Vector3(-this.width / 2, -this.height / 2, -this.depth / 2)

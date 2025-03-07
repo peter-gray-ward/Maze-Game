@@ -11,7 +11,6 @@ import { CeilingLight, Light } from './light';
 import { Game } from '../singletons/game';
 
 export class Room extends MapSite {
-    sides: Side[] = new Array(4).fill(null);
     floor!: Floor;
     lights: Light[] = [];
     visited: boolean = false;
@@ -22,19 +21,24 @@ export class Room extends MapSite {
 
 
     SetSide(dir: DirectionType, side: Side) {
-        for (let i = 0; i < this.sides.length; i++) {
-            if (this.sides[i].direction == dir) {
-                this.sides[i] = side;
+        for (let i = 0; i < this.children.length; i++) {
+            if (this.children[i] instanceof Side && (this.children[i] as Side).direction == dir) {
+                this.children[i] = side;
             }
         }
     }
 
-    GetSide(dir: number) {
-        return this.sides[dir];
+    GetSide(dir: DirectionType) {
+        for (let child of this.children) {
+            if (child instanceof Side && child.direction == dir) {
+                return child;
+            }
+        }
+        return null;
     }
 
     override Build() {
-        if (!this.sides.find(side => side instanceof Door)) return;
+        if (!this.children.find(child => child instanceof Door)) return;
 
         super.Build();
 
@@ -75,50 +79,52 @@ export class Room extends MapSite {
         }
         
 
-        for (let s of this.sides) {
-            let side: Side = s instanceof Wall ? 
-                new Wall.WallBuilder()
-                    .game(this.game)
-                    .id(this.id.concat([s.direction]))
-                    .position(this.position.clone())
-                    .width(this.width)
-                    .height(this.height)
-                    .depth(12)
-                    .color('blue')
-                    .text("I'm a wall!")
-                    .build()
-                : new Door.DoorBuilder()
-                    .game(this.game)
-                    .id(this.id.concat([s.direction]))
-                    .position(this.position.clone())
-                    .width(this.width)
-                    .height(this.height)
-                    .depth(12)
-                    .color(s.color)
-                    .text("I'm a door!")
-                    .build()
+        for (let s of this.children) {
+            if (s instanceof Side) {
+                let side: Side = s instanceof Wall ? 
+                    new Wall.WallBuilder()
+                        .game(this.game)
+                        .id(this.id.concat([s.direction]))
+                        .position(this.position.clone())
+                        .width(this.width)
+                        .height(this.height)
+                        .depth(12)
+                        .color('blue')
+                        .text("I'm a wall!")
+                        .build()
+                    : new Door.DoorBuilder()
+                        .game(this.game)
+                        .id(this.id.concat([s.direction]))
+                        .position(this.position.clone())
+                        .width(this.width)
+                        .height(this.height)
+                        .depth(12)
+                        .color(s.color)
+                        .text("I'm a door!")
+                        .build()
 
-            side.Build();
-            switch (s.direction) {
-                case Direction.East:
-                    side.scene.translateZ(this.depth / 2);
-                    break;
-                case Direction.West:
-                    side.scene.translateZ(-this.depth / 2);
-                    break;
-                case Direction.South:
-                    side.scene.translateX(this.width / 2);
-                    side.scene.rotateY(Math.PI / 2);
-                    break;
-                case Direction.North:
-                    side.scene.translateX(-this.width / 2);
-                    side.scene.rotateY(Math.PI / 2);
-                    break;
-                default:
-                    break;
+                side.Build();
+                switch (s.direction) {
+                    case Direction.East:
+                        side.scene.translateZ(this.depth / 2);
+                        break;
+                    case Direction.West:
+                        side.scene.translateZ(-this.depth / 2);
+                        break;
+                    case Direction.South:
+                        side.scene.translateX(this.width / 2);
+                        side.scene.rotateY(Math.PI / 2);
+                        break;
+                    case Direction.North:
+                        side.scene.translateX(-this.width / 2);
+                        side.scene.rotateY(Math.PI / 2);
+                        break;
+                    default:
+                        break;
+                }
+                
+                this.scene.add(side.scene);
             }
-            
-            this.scene.add(side.scene);
         }
 
 
@@ -150,14 +156,8 @@ export class Room extends MapSite {
     }
 
     static RoomBuilder = class extends MapSite.MapSiteBuilder {
-        private _sides: Side[] = [];
         private _floor!: Floor;
         private _lights: Light[] = [];
-
-        sides(sides: Side[]): this {
-            this._sides = sides;
-            return this;
-        }
 
         floor(floor: Floor): this {
             this._floor = floor;

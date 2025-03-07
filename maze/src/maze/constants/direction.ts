@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export type DirectionType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7; // Define a union type for direction values
 
 export const Direction = {
@@ -32,3 +34,5 @@ export const OtherDirections = (dir: DirectionType): DirectionType[] => {
     if (dir == Direction.West) return [Direction.South, Direction.East, Direction.North];
     return [];
 }
+
+export const GRAVITY = -9.8

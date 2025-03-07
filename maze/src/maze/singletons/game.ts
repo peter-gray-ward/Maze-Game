@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Injectable, inject } from '@angular/core';
 import { User } from '../models/user';
+import { MapSite } from '../models/map-site';
 import { fromEvent } from 'rxjs';
 
 @Injectable({
@@ -9,7 +10,7 @@ import { fromEvent } from 'rxjs';
 export class Game {
 	scene!: THREE.Scene;
   	renderer!: THREE.WebGLRenderer;
-  	actors: any[] = [];
+  	levels: any[] = [];
   	user!: User;
 
 	init(user: User) {
@@ -39,10 +40,12 @@ export class Game {
 	}
 
 	animate() {
-		this.user.Act();
-		for (let actor of this.actors) {
-			actor.Act();
+		let activeMapSites: MapSite[] = [];
+		for (let level of this.levels) {
+			activeMapSites = activeMapSites.concat(level.Activate());
 		}
+		this.user.setEnvironment(activeMapSites);
+		this.user.Act();
 	    this.renderer.render(this.scene, this.user.camera);
 	    window.requestAnimationFrame(this.animate.bind(this));
 	 }

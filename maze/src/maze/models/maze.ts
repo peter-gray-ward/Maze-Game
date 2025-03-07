@@ -1,5 +1,6 @@
 import { Room } from './room';
 import { Wall } from './wall';
+import { MapSite } from './map-site';
 import { Side } from './side';
 import { Direction } from '../constants/direction';
 import { Game } from '../singletons/game';
@@ -65,7 +66,7 @@ export class Maze {
             const y = Math.floor(i / dimensions);
             const roomA = this.rooms[i];
 
-            roomA.sides = [
+            roomA.children = roomA.children.concat([
                 new Wall.WallBuilder()
                     .game(this.game)
                     .id(roomA.id.concat([Direction.North]))
@@ -117,7 +118,7 @@ export class Maze {
                     .color("white")
                     .text("West Wall")
                     .build() as Side
-            ];
+            ]);
         }
     }
 
@@ -140,16 +141,19 @@ export class Maze {
         return this.rooms.find(room => room.id.join(',') == id.join(','));
     }
 
-    Act(): void {
+    Activate(): Room[] {
         const threshold = this.roomWidth * 2;
+        const activeRooms: Room[] = [];
         for (let room of this.rooms) {
             const roomNear = room.position.distanceTo(this.userPosition) < threshold;
             if (roomNear) {
                 room.Act();
+                activeRooms.push(room);
             } else {
                 room.Remove();
             }
         }
+        return activeRooms;
     }
     
 }

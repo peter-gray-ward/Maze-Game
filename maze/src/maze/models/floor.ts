@@ -9,6 +9,8 @@ const floorTexture = new THREE.TextureLoader().load("/floor.jpg", texture => {
 });
 
 export class Floor extends MapSite {
+    public floorDepth: number = 12;
+
     constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
         super(game, id, position, width, height, depth, color, text);
     }
@@ -18,9 +20,10 @@ export class Floor extends MapSite {
     }
 
     override Build() {
+        super.Build();
         this.scene.name = this.id.join(',');
         const floorMesh = new THREE.Mesh(
-            new THREE.BoxGeometry(this.width, 12, this.depth),
+            new THREE.BoxGeometry(this.width, this.floorDepth, this.depth),
             new THREE.MeshStandardMaterial({
                 map: floorTexture,
                 side: THREE.DoubleSide,

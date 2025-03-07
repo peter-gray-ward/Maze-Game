@@ -40,9 +40,12 @@ export class User extends MapSite {
         w: false, a: false, s: false, d: false,
         arrowleft: false, arrowup: false, arrowdown: false, arrowright: false
     };
-    cameraOffset: number = -300;
+    localYAxis = new THREE.Vector3(0, 1, 0);
+    cameraRadius: number = 144;
+    cameraTheta: number = 0.88;
     loaded = new Subject<User>();
     activity = new Subject<User>();
+    environment: MapSite[] = [];
 
     constructor(
         game: Game,
@@ -71,16 +74,6 @@ export class User extends MapSite {
         this.model.scene.rotateY(Math.PI);
         this.box = new THREE.Box3().setFromObject(this.model.scene);
         this.model.scene.position.set(0, -1100, 0);
-
-        const headBone = this.model.scene.getObjectByName("Beta_Joints");
-        if (headBone) {
-            headBone.add(this.camera);
-            this.camera.position.set(0, 200, this.cameraOffset); 
-            this.camera.rotation.set(0, Math.PI, 0);
-        } else {
-            console.warn("Head bone not found in GLTF model!");
-        }
-
         this.addEvents();
         this.startAnimation('lounge')
         this.loaded.next(this);
@@ -94,13 +87,41 @@ export class User extends MapSite {
     private move(v: THREE.Vector3): void {
         this.camera.position.add(v);
         this.model.scene.position.add(v);
-
-        const headBone = this.model.scene.getObjectByName("Beta_Joints");
-        if (headBone) {
-            headBone.add(this.camera);
-            this.camera.position.set(0, 200, this.cameraOffset);
-        }
+        this.alignCamera();
     }
+
+    private alignCamera(): void {
+    const forwardDirection = this.model.scene.getWorldDirection(new THREE.Vector3());
+    const headBone = this.model.scene.getObjectByName("Beta_Joints");
+
+    if (headBone) {
+        const headPosition = headBone.getWorldPosition(new THREE.Vector3());
+        const cameraPhi = 0;
+
+        const cameraRadius = this.cameraRadius * this.cameraTheta;
+        const x = cameraRadius * Math.sin(this.cameraTheta) * Math.sin(cameraPhi); // Horizontal plane (x-axis)
+        const z = cameraRadius * Math.sin(this.cameraTheta) * Math.cos(cameraPhi); // Horizontal plane (z-axis)
+        const y = cameraRadius * Math.cos(this.cameraTheta);
+
+        let point = new THREE.Vector3(x, y, z);
+
+        const defaultDirection = new THREE.Vector3(0, 0, -1);
+        const alignmentQuaternion = new THREE.Quaternion();
+        alignmentQuaternion.setFromUnitVectors(defaultDirection, forwardDirection.clone().normalize());
+        point.applyQuaternion(alignmentQuaternion);
+
+        point.add(headPosition);
+
+        this.camera.position.copy(point);
+
+
+        this.camera.lookAt(this.model.scene.position
+            .clone()
+            .add(forwardDirection.multiplyScalar(1000)));
+    }
+}
+
+
 
     private rotate(dir: number): void {
         this.model.scene.rotateY(dir * 0.3);
@@ -142,7 +163,7 @@ export class User extends MapSite {
                     break;
                 case 'arrowright':
                     this.rotate(-1);
-                    break;  
+                    break;
             }
         });
 
@@ -242,6 +263,10 @@ export class User extends MapSite {
         }
     }
 
+    setEnvironment(activeMapSites: MapSite[]): void {
+        this.environment = activeMapSites;
+    }
+
     override Act(): void {
         super.Act();
         let y = 0;
@@ -274,9 +299,15 @@ export class User extends MapSite {
                     case 'arrowright':
                         this.rotate(-this.rotationSpeed);
                         break;
+                    case 'arrowdown':
+                        this.cameraTheta -= 0.01;
+                        break;
+                    case 'arrowup':
+                        this.cameraTheta += 0.01;
                 }
             }
         }
+
         for (let which in this.animations) {
             if (this.animations[which]) {
                 const action = this.animations[which].action;
@@ -290,8 +321,56 @@ export class User extends MapSite {
                 }
             }
         }
+
         this.animationMixer.update(0.016); // Update animation mixer every frame (~60 FPS)
+        this.EngageEnvironment(this.environment);
+        this.alignCamera();
         this.activity.next(this);
+    }
+
+    EngageEnvironment(environment: MapSite[]): void {
+        const fallVector: THREE.Vector3 = this.Fall();
+        const userBox = new THREE.Box3().setFromObject(this.model.scene);
+        
+        const EngageMeshes = (item: THREE.Group | THREE.Mesh) => {
+            if (item instanceof THREE.Group) {
+                for (let child of item.children) {
+                    EngageMeshes(child as (THREE.Group | THREE.Mesh));
+                }
+            } else {
+                const meshBox = new THREE.Box3().setFromObject(item);
+                if (userBox.intersectsBox(meshBox)) {
+                    this.Touch(userBox, item, meshBox);
+                }
+            }
+        }
+
+        for (let mapSite of environment) {
+            EngageMeshes(mapSite.scene);
+        }
+        
+        this.model.scene.position.add(fallVector);
+    }
+
+    Fall(): THREE.Vector3 {
+        return this.localYAxis.clone().multiplyScalar(this.velocity.y);
+    }
+
+    Touch(userBox: THREE.Box3, mesh: THREE.Mesh, meshBox: THREE.Box3): void {
+
+        // Touching from Directly Above
+        const userBottomY = userBox.min.y;
+        const objectTopY = meshBox.max.y;
+
+        const threshold = 1;
+        const overheadDiff = Math.abs(userBottomY - objectTopY);
+
+        if (overheadDiff < threshold && this.velocity.y < 0) {
+            console.log("Landed on top at diff", overheadDiff);
+            this.velocity.y = 0;
+            this.model.scene.position.y = objectTopY + mesh.geometry.boundingBox!.max.y -  mesh.geometry.boundingBox!.min.y;
+        }
+
     }
 
 }

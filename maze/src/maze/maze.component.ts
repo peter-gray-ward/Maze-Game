@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MapSite } from './models/map-site';
@@ -29,9 +29,9 @@ export class MazeComponent {
     map: false
   };
   user!: User;
+  @ViewChild("userMarker") userMarker!: ElementRef;
   userPosition = signal({ x: 0, y: 0, z: 0, left: 0, top: 0 });
   userAnimations: any = [];
-  userActions: string[] = [];
   game: Game = inject(Game);
 
   constructor() {
@@ -55,6 +55,7 @@ export class MazeComponent {
         const mazeWidthPx = Math.min(window.innerWidth, window.innerHeight);
         const roomWidthPx = mazeWidthPx / this.maze.dimensions;
         const halfRoomWidthPx = roomWidthPx / 2;
+        const halfUserMarkerPx = (+getComputedStyle(this.userMarker.nativeElement).width.split('px')[0]) / 2;
         this.userPosition.update(pos => ({
           ...pos,
           x: user.model.scene.position.x,
@@ -64,17 +65,15 @@ export class MazeComponent {
                 * (
                   user.model.scene.position.z 
                   / mazeWidth
-                ) + halfRoomWidthPx - 7.75,
+                ) + halfRoomWidthPx - halfUserMarkerPx,
           top: mazeWidthPx
                * (
                   user.model.scene.position.x 
                   / mazeHeight
-               ) + halfRoomWidthPx - 7.75
+               ) + halfRoomWidthPx - halfUserMarkerPx
         }));
         this.userAnimations = Object.keys(user.animations)
           .filter(animation => user.animations[animation] && user.animations[animation].speedFactor);
-        this.userActions = Object.keys(user.actions)
-          .filter(action => user.actions[action]);
       });
       this.generateMaze();
       this.build3DMaze();
@@ -209,9 +208,6 @@ export class MazeComponent {
             break;
         }
 
-        console.log(currentRoom, KeyOf(Direction, direction), nextRoom)
-        
-
         // Check if nextRoom is valid before accessing roomB
         if (nextRoom < path.length) {
           let roomB = path[nextRoom];
@@ -246,12 +242,11 @@ export class MazeComponent {
 
 
           path[currentRoom].visited = true;
-          console.log(path[currentRoom])
 
           for (let dir of OtherDirections(direction)) {
-            let s = path[currentRoom].sides.filter(s => s.direction == dir)[0];
-            if (s instanceof Wall) {
-              s.color = 'blue';
+            let s = path[currentRoom].children.filter(s => s instanceof Wall && s.direction == dir);
+            if (s.length) {
+              s[0].color = 'blue';
             }
           }
 
@@ -295,16 +290,6 @@ export class MazeComponent {
       return this.generateMaze();
     }
 
-    // for (var path of paths) {
-    //   for (var i = 0; i < path.length; i++) {
-    //     for (var j = 0; j < this.maze.rooms[i].sides.length; j++) {
-    //       if (path[i].sides[j] instanceof Door && this.maze.rooms[i].sides[j] instanceof Wall) {
-    //         this.maze.rooms[i].sides[j] = path[i].sides[j];
-    //       }
-    //     }
-    //     this.maze.rooms[i] = path[i];
-    //   }
-    // }
     console.log("Finished creating the maze path", this.maze);
   }
 
@@ -312,6 +297,6 @@ export class MazeComponent {
     for (let room of this.maze.rooms) {
       room.Build();
     }
-    this.game.actors.push(this.maze);
+    this.game.levels.push(this.maze);
   }
 }

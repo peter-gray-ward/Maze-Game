@@ -1,7 +1,8 @@
 <div *ngFor="let room of maze.rooms; trackBy: trackById">
   <room [room]="room"></room>
 </div>
-<i *ngIf="userPosition()" id="user-position-marker" 
+<i #userMarker
+  *ngIf="userPosition()" id="user-position-marker" 
   [style.left.px]="userPosition().left" 
   [style.top.px]="userPosition().top"></i>
 <div id="header">
