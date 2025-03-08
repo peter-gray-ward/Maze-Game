@@ -15,11 +15,12 @@ export abstract class MapSite {
     public height!: number;
     public depth!: number;
     public position!: THREE.Vector3;
-    public velocity: any = {
-        x: 0,
-        y: GRAVITY,
-        z: 0
-    };
+    public velocity: THREE.Vector3 = new THREE.Vector3(
+        0,
+        GRAVITY,
+        0
+    );
+    public friction: number = 0.0;
 
     constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
         this.game = game;

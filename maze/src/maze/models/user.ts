@@ -84,9 +84,9 @@ export class User extends MapSite {
     }
 
 
-    private move(v: THREE.Vector3): void {
-        this.camera.position.add(v);
-        this.model.scene.position.add(v);
+    private move(): void {
+        this.camera.position.add(this.velocity);
+        this.model.scene.position.add(this.velocity);
         this.alignCamera();
     }
 
@@ -121,30 +121,36 @@ export class User extends MapSite {
             let key = event.key.toLowerCase();
 
             let y = 0;
-            this.actions[key] = true;
+            
             let forwardVector = new THREE.Vector3();
-            forwardVector.y = y;
             this.camera.getWorldDirection(forwardVector);
+            forwardVector.y = y;
             forwardVector.normalize();
             let strafeDirection = new THREE.Vector3();
             strafeDirection.crossVectors(this.camera.up, forwardVector).normalize();
 
+            let velocityAddition = new THREE.Vector3();
+
             switch (key) {
                 case 'w':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
+                    if (!this.actions[key]) velocityAddition.add(forwardVector.clone().multiplyScalar(this.speed));
                     break;
                 case 's':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
+                    if (!this.actions[key]) velocityAddition.add(forwardVector.clone().multiplyScalar(-this.speed));
                     break;
                 case 'a':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
+                    if (!this.actions[key]) velocityAddition.add(strafeDirection.clone().multiplyScalar(this.speed));
                     break;
                 case 'd':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
+                    if (!this.actions[key]) velocityAddition.add(strafeDirection.clone().multiplyScalar(-this.speed));
                     break;
                 case 'arrowleft':
                     this.rotate(1);
@@ -153,44 +159,40 @@ export class User extends MapSite {
                     this.rotate(-1);
                     break;
             }
+
+            this.actions[key] = true;
+
+            this.velocity.add(velocityAddition);
         });
 
         fromEvent(window, 'keyup').subscribe((event: any) => {
             let key = event.key.toLowerCase();
-            this.actions[key] = false;
-            switch (key) {
-                case 'w':
-                    if (!this.actions.s && !this.actions.a && !this.actions.d) {
-                        this.animations.walk.speedFactor = 0;
-                        this.startAnimation('lounge');
-                    }
-                    break;
-                case 's':
-                    if (!this.actions.a && !this.actions.w && !this.actions.d) {
-                        this.animations.walk.speedFactor = 0;
-                        this.startAnimation('lounge');
-                    }
-                    break;
-                case 'a':
-                    if (!this.actions.s && !this.actions.w && !this.actions.d) {
-                        this.animations.walk.speedFactor = 0;
-                        this.startAnimation('lounge');
-                    }
-                    break;
-                case 'd':
-                    if (!this.actions.s && !this.actions.a && !this.actions.w) {
-                        this.animations.walk.speedFactor = 0;
-                        this.startAnimation('lounge');
-                    }
-                    break;
-                case 'arrowleft':
-                    this.rotate(1);
-                    break;
-                case 'arrowright':
-                    this.rotate(-1);
-                    break;  
+            this.actions[key] = false; // Mark key as released
+
+            // Recalculate velocity based on remaining active keys
+            let newVelocity = new THREE.Vector3();
+            let forwardVector = new THREE.Vector3();
+            this.camera.getWorldDirection(forwardVector);
+            forwardVector.y = 0;
+            forwardVector.normalize();
+            let strafeDirection = new THREE.Vector3();
+            strafeDirection.crossVectors(this.camera.up, forwardVector).normalize();
+
+            if (this.actions.w) newVelocity.add(forwardVector.clone().multiplyScalar(this.speed));
+            if (this.actions.s) newVelocity.add(forwardVector.clone().multiplyScalar(-this.speed));
+            if (this.actions.a) newVelocity.add(strafeDirection.clone().multiplyScalar(this.speed));
+            if (this.actions.d) newVelocity.add(strafeDirection.clone().multiplyScalar(-this.speed));
+
+            // Update velocity based on remaining active keys
+            this.velocity.copy(newVelocity);
+
+            // Stop animation if no movement keys are held
+            if (!this.actions.w && !this.actions.s && !this.actions.a && !this.actions.d) {
+                this.animations.walk.speedFactor = 0;
+                this.startAnimation('lounge');
             }
         });
+
     }
 
 
@@ -257,30 +259,15 @@ export class User extends MapSite {
 
     override Act(): void {
         super.Act();
-        let y = 0;
+        
         let forwardVector = new THREE.Vector3();
         this.camera.getWorldDirection(forwardVector);
-        forwardVector.y = y;
+        forwardVector.y = 0;
         forwardVector.normalize();
-
-        let strafeDirection = new THREE.Vector3();
-        strafeDirection.crossVectors(this.camera.up, forwardVector).normalize();
 
         for (let action in this.actions) {
             if (this.actions[action]) {
                 switch (action) {
-                    case 'w':
-                        this.move(forwardVector.multiplyScalar(this.speed));
-                        break;
-                    case 's':
-                        this.move(forwardVector.multiplyScalar(-this.speed));
-                        break;
-                    case 'a':
-                        this.move(strafeDirection.clone().multiplyScalar(this.speed));
-                        break;
-                    case 'd':
-                        this.move(strafeDirection.clone().multiplyScalar(-this.speed));
-                        break;
                     case 'arrowleft':
                         this.rotate(this.rotationSpeed);
                         break;
@@ -292,6 +279,7 @@ export class User extends MapSite {
                         break;
                     case 'arrowup':
                         this.cameraTheta -= 0.005;
+                        break;
                 }
             }
         }
@@ -311,14 +299,19 @@ export class User extends MapSite {
         }
 
         this.animationMixer.update(0.016); // Update animation mixer every frame (~60 FPS)
+        this.move();
         this.EngageEnvironment(this.environment, forwardVector);
         this.alignCamera();
         this.activity.next(this);
     }
 
+
+
     EngageEnvironment(environment: MapSite[], forwardVector: THREE.Vector3): void {
         const fallVector: THREE.Vector3 = this.Fall();
         const userBox = new THREE.Box3().setFromObject(this.model.scene);
+        let sidewaysVector = new THREE.Vector3();
+        sidewaysVector.crossVectors(this.camera.up, forwardVector).normalize();
         
         const EngageMeshes = (item: THREE.Group | THREE.Mesh) => {
             if (item instanceof THREE.Group) {
@@ -346,23 +339,30 @@ export class User extends MapSite {
     }
 
     Touch(userBox: THREE.Box3, mesh: THREE.Mesh, meshBox: THREE.Box3, forwardVector: THREE.Vector3): void {
-
-        // Touching from Directly Above
         const userBottomY = userBox.min.y;
         const objectTopY = meshBox.max.y;
-
         const threshold = 1;
         const overheadDiff = Math.abs(userBottomY - objectTopY);
-
-        // Touching from the Side
-        
 
         if ((overheadDiff < threshold || (userBottomY < objectTopY && threshold < 10)) && this.velocity.y < 0) {
             console.log("Landed on top at diff", overheadDiff);
             this.velocity.y = 0;
-            this.model.scene.position.y = objectTopY + mesh.geometry.boundingBox!.max.y -  mesh.geometry.boundingBox!.min.y;
+            this.model.scene.position.y = objectTopY + (mesh.geometry.boundingBox!.max.y - mesh.geometry.boundingBox!.min.y);
         }
 
-    }
+        if (userBox.intersectsBox(meshBox)) {
+            const penetrationDepthX = Math.min(Math.abs(userBox.max.x - meshBox.min.x), Math.abs(userBox.min.x - meshBox.max.x));
+            const penetrationDepthZ = Math.min(Math.abs(userBox.max.z - meshBox.min.z), Math.abs(userBox.min.z - meshBox.max.z));
+
+            if (penetrationDepthX < penetrationDepthZ) {
+                console.log("Side collision: Blocking X movement");
+                this.velocity.x = 0;
+            } else {
+                console.log("Side collision: Blocking Z movement");
+                this.velocity.z = 0;
+            }
+        }
+}
+
 
 }
