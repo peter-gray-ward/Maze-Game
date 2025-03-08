@@ -30,8 +30,6 @@ export class Wall extends Side {
                 side: THREE.DoubleSide
             })
         );
-        wall.receiveShadow = true;
-        wall.castShadow = true;
         wall.position.copy(this.position);
         this.scene = wall;
     }

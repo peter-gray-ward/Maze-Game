@@ -33,6 +33,7 @@ export class MazeComponent {
   userPosition = signal({ x: 0, y: 0, z: 0, left: 0, top: 0 });
   userAnimations: any = [];
   game: Game = inject(Game);
+  loaded: boolean = false;
 
   constructor() {
     this.maze = new Maze(this.game, this.dimensions);

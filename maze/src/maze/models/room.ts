@@ -5,6 +5,7 @@ import { MapSite } from './map-site';
 import { Direction, DirectionType } from '../constants/direction';
 import { Side } from './side';
 import { Floor } from './floor';
+import { Ceiling } from './ceiling';
 import { Door } from './door';
 import { Wall } from './wall';
 import { CeilingLight, Light } from './light';
@@ -12,6 +13,7 @@ import { Game } from '../singletons/game';
 
 export class Room extends MapSite {
     floor!: Floor;
+    ceiling!: Ceiling;
     lights: Light[] = [];
     visited: boolean = false;
 
@@ -57,19 +59,31 @@ export class Room extends MapSite {
 
         this.scene.add(this.floor.scene);
 
-        const light = new THREE.AmbientLight(0xffffff, 0.1);
-        // light.target.position.set(this.floor.position.x, this.floor.position.y, this.floor.position.z);
+        this.ceiling = new Ceiling.CeilingBuilder()
+            .game(this.game)
+            .id(this.id.concat([0]))
+            .position(this.position.clone().add(new THREE.Vector3(0, this.height, 0)))
+            .width(this.width)
+            .height(12)
+            .depth(this.depth)
+            .color('blue')
+            .text("I'm a ceiling!")
+            .build();
+        this.ceiling.Build();
+
+        this.scene.add(this.ceiling.scene);
+
+        
         this.lights.push(
             new CeilingLight.LightBuilder()
             .game(this.game)
             .id(this.id.concat([5]))
-            .position(this.position.clone().add(new THREE.Vector3(0, this.height, 0)))
+            .position(this.ceiling.position.clone().add(new THREE.Vector3(0, -20, 0)))
             .width(this.width)
             .height(12)
             .depth(this.depth)
             .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
             .text("I'm a light!")
-            .light(light)
             .build()
         );
 

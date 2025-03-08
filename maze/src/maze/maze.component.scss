@@ -9,6 +9,28 @@
     }
 }
 
+#loading-screen  {
+    position: absolute;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: url(/loading.gif);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    background-color: blue;
+
+    .loading-dot {
+        position: absolute;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 100%;
+        background: white;
+    }
+}
+
 #user-position-marker {
     position: absolute;
     width: 1rem;
