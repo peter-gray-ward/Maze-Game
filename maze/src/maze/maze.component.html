@@ -11,6 +11,9 @@
     <a (click)="toggleMap()">{{toggle.map ? 'Hide ' : 'Show '}}Map</a>
   </div>
   <div>
-    <span [style.font-size.px]="10">{{ userPosition().x.toFixed(1) }}, {{ userPosition().z.toFixed(1) }}</span>
+    <pre [style.font-size.px]="10">
+  {{ userPosition().x.toFixed(1) }}, 
+  {{ userPosition().y.toFixed(1) }}
+  {{ userPosition().z.toFixed(1) }}</pre>
   </div>
 </div>

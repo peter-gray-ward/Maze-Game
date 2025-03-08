@@ -41,12 +41,12 @@ export class Room extends MapSite {
         if (!this.children.find(child => child instanceof Door)) return;
 
         super.Build();
-
+        
 
         this.floor = new Floor.FloorBuilder()
             .game(this.game)
             .id(this.id.concat([0]))
-            .position(this.position.clone().add(new THREE.Vector3(0, -this.height / 2, 0)))
+            .position(this.position.clone())
             .width(this.width)
             .height(12)
             .depth(this.depth)
@@ -85,7 +85,7 @@ export class Room extends MapSite {
                     new Wall.WallBuilder()
                         .game(this.game)
                         .id(this.id.concat([s.direction]))
-                        .position(this.position.clone())
+                        .position(this.position.clone().add(new THREE.Vector3(0, this.height / 2, 0)))
                         .width(this.width)
                         .height(this.height)
                         .depth(12)
@@ -95,7 +95,7 @@ export class Room extends MapSite {
                     : new Door.DoorBuilder()
                         .game(this.game)
                         .id(this.id.concat([s.direction]))
-                        .position(this.position.clone())
+                        .position(this.position.clone().add(new THREE.Vector3(0, this.height / 2, 0)))
                         .width(this.width)
                         .height(this.height)
                         .depth(12)

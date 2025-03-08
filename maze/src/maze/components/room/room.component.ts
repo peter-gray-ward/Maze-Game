@@ -21,7 +21,9 @@ export class RoomComponent {
   Keys: any = {
     Direction: Object.keys(Direction) as string[]
   }
-
+  roomSides(): Side[] {
+    return this.room.children.filter((child: MapSite) => child instanceof Side);
+  }
   trackById(index: number, site: MapSite): string {
     return site.id.join(',');
   }

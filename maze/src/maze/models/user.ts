@@ -26,7 +26,7 @@ export interface UserPosition {
 export class User extends MapSite {
     model!: GLTFModel;
     camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-    speed: number = 20;
+    speed: number = 3;
     rotationSpeed: number = Math.PI / 11;
     animationMixer!: THREE.AnimationMixer;
     animations: any = {
@@ -42,7 +42,7 @@ export class User extends MapSite {
     };
     localYAxis = new THREE.Vector3(0, 1, 0);
     cameraRadius: number = 144;
-    cameraTheta: number = 0.88;
+    cameraTheta: number = 1;
     loaded = new Subject<User>();
     activity = new Subject<User>();
     environment: MapSite[] = [];
@@ -73,7 +73,7 @@ export class User extends MapSite {
         this.model.scene.children[0].scale.set(0.4, 0.4, 0.4);
         this.model.scene.rotateY(Math.PI);
         this.box = new THREE.Box3().setFromObject(this.model.scene);
-        this.model.scene.position.set(0, -1100, 0);
+        this.model.scene.position.set(0, 0, 0);
         this.addEvents();
         this.startAnimation('lounge')
         this.loaded.next(this);
@@ -91,35 +91,23 @@ export class User extends MapSite {
     }
 
     private alignCamera(): void {
-    const forwardDirection = this.model.scene.getWorldDirection(new THREE.Vector3());
-    const headBone = this.model.scene.getObjectByName("Beta_Joints");
+        const headBone = this.model.scene.getObjectByName("Beta_Joints");
+        if (headBone) {
+            const headPosition = headBone.getWorldPosition(new THREE.Vector3());
+            const forwardDir = this.model.scene.getWorldDirection(new THREE.Vector3());
+            const backwardDir = forwardDir.clone().negate();
+            const cameraRadius = this.cameraRadius * Math.pow(this.cameraTheta, 8);
+            const verticalOffset = this.localYAxis.clone().multiplyScalar(Math.sin(this.cameraTheta) * cameraRadius);
+            const backwardOffset = backwardDir.clone().multiplyScalar(Math.cos(this.cameraTheta) * cameraRadius);
+            const cameraPosition = headPosition.clone()
+                .add(verticalOffset)  // Move up/down
+                .add(backwardOffset); // Move closer/further behind
+            this.camera.position.copy(cameraPosition);
 
-    if (headBone) {
-        const headPosition = headBone.getWorldPosition(new THREE.Vector3());
-        const cameraPhi = 0;
-
-        const cameraRadius = this.cameraRadius * this.cameraTheta;
-        const x = cameraRadius * Math.sin(this.cameraTheta) * Math.sin(cameraPhi); // Horizontal plane (x-axis)
-        const z = cameraRadius * Math.sin(this.cameraTheta) * Math.cos(cameraPhi); // Horizontal plane (z-axis)
-        const y = cameraRadius * Math.cos(this.cameraTheta);
-
-        let point = new THREE.Vector3(x, y, z);
-
-        const defaultDirection = new THREE.Vector3(0, 0, -1);
-        const alignmentQuaternion = new THREE.Quaternion();
-        alignmentQuaternion.setFromUnitVectors(defaultDirection, forwardDirection.clone().normalize());
-        point.applyQuaternion(alignmentQuaternion);
-
-        point.add(headPosition);
-
-        this.camera.position.copy(point);
-
-
-        this.camera.lookAt(this.model.scene.position
-            .clone()
-            .add(forwardDirection.multiplyScalar(1000)));
+            const lookPosition = headPosition.add(new THREE.Vector3(0, 80, 0))//.add(forwardDir.multiplyScalar(3000 * (1 / this.cameraTheta)))
+            this.camera.lookAt(lookPosition);
+        }
     }
-}
 
 
 
@@ -134,12 +122,12 @@ export class User extends MapSite {
 
             let y = 0;
             this.actions[key] = true;
-            let v = new THREE.Vector3();
-            v.y = y;
-            this.camera.getWorldDirection(v);
-            v.normalize();
+            let forwardVector = new THREE.Vector3();
+            forwardVector.y = y;
+            this.camera.getWorldDirection(forwardVector);
+            forwardVector.normalize();
             let strafeDirection = new THREE.Vector3();
-            strafeDirection.crossVectors(this.camera.up, v).normalize();
+            strafeDirection.crossVectors(this.camera.up, forwardVector).normalize();
 
             switch (key) {
                 case 'w':
@@ -270,22 +258,22 @@ export class User extends MapSite {
     override Act(): void {
         super.Act();
         let y = 0;
-        let v = new THREE.Vector3();
-        this.camera.getWorldDirection(v);
-        v.y = y;
-        v.normalize();
+        let forwardVector = new THREE.Vector3();
+        this.camera.getWorldDirection(forwardVector);
+        forwardVector.y = y;
+        forwardVector.normalize();
 
         let strafeDirection = new THREE.Vector3();
-        strafeDirection.crossVectors(this.camera.up, v).normalize();
+        strafeDirection.crossVectors(this.camera.up, forwardVector).normalize();
 
         for (let action in this.actions) {
             if (this.actions[action]) {
                 switch (action) {
                     case 'w':
-                        this.move(v.multiplyScalar(this.speed));
+                        this.move(forwardVector.multiplyScalar(this.speed));
                         break;
                     case 's':
-                        this.move(v.multiplyScalar(-this.speed));
+                        this.move(forwardVector.multiplyScalar(-this.speed));
                         break;
                     case 'a':
                         this.move(strafeDirection.clone().multiplyScalar(this.speed));
@@ -300,10 +288,10 @@ export class User extends MapSite {
                         this.rotate(-this.rotationSpeed);
                         break;
                     case 'arrowdown':
-                        this.cameraTheta -= 0.01;
+                        this.cameraTheta += 0.005;
                         break;
                     case 'arrowup':
-                        this.cameraTheta += 0.01;
+                        this.cameraTheta -= 0.005;
                 }
             }
         }
@@ -323,12 +311,12 @@ export class User extends MapSite {
         }
 
         this.animationMixer.update(0.016); // Update animation mixer every frame (~60 FPS)
-        this.EngageEnvironment(this.environment);
+        this.EngageEnvironment(this.environment, forwardVector);
         this.alignCamera();
         this.activity.next(this);
     }
 
-    EngageEnvironment(environment: MapSite[]): void {
+    EngageEnvironment(environment: MapSite[], forwardVector: THREE.Vector3): void {
         const fallVector: THREE.Vector3 = this.Fall();
         const userBox = new THREE.Box3().setFromObject(this.model.scene);
         
@@ -340,7 +328,7 @@ export class User extends MapSite {
             } else {
                 const meshBox = new THREE.Box3().setFromObject(item);
                 if (userBox.intersectsBox(meshBox)) {
-                    this.Touch(userBox, item, meshBox);
+                    this.Touch(userBox, item, meshBox, forwardVector);
                 }
             }
         }
@@ -350,13 +338,14 @@ export class User extends MapSite {
         }
         
         this.model.scene.position.add(fallVector);
+        this.activity.next(this);
     }
 
     Fall(): THREE.Vector3 {
         return this.localYAxis.clone().multiplyScalar(this.velocity.y);
     }
 
-    Touch(userBox: THREE.Box3, mesh: THREE.Mesh, meshBox: THREE.Box3): void {
+    Touch(userBox: THREE.Box3, mesh: THREE.Mesh, meshBox: THREE.Box3, forwardVector: THREE.Vector3): void {
 
         // Touching from Directly Above
         const userBottomY = userBox.min.y;
@@ -365,7 +354,10 @@ export class User extends MapSite {
         const threshold = 1;
         const overheadDiff = Math.abs(userBottomY - objectTopY);
 
-        if (overheadDiff < threshold && this.velocity.y < 0) {
+        // Touching from the Side
+        
+
+        if ((overheadDiff < threshold || (userBottomY < objectTopY && threshold < 10)) && this.velocity.y < 0) {
             console.log("Landed on top at diff", overheadDiff);
             this.velocity.y = 0;
             this.model.scene.position.y = objectTopY + mesh.geometry.boundingBox!.max.y -  mesh.geometry.boundingBox!.min.y;

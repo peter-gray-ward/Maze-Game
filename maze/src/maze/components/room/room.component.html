@@ -1,4 +1,4 @@
 <div class="room" id="{{ room.id.join(',') }}" [style.background]="room.color">
-  <side *ngFor="let side of room.sides; trackBy: trackById" [side]="side"></side>
+  <side *ngFor="let side of roomSides(); trackBy: trackById" [side]="side"></side>
   <p [style.font-size.px]="10" [style.text-align]="'center'" [style.color]="'white'">{{ room.id.join(',') }}</p>
 </div>

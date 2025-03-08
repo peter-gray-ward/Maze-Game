@@ -19,9 +19,9 @@ export class Maze {
     dimensions!: number;
     game!: Game;
     text: string = "The Maze";
-    roomWidth: number = 5000;
-    roomHeight: number = 2800;
-    roomDepth: number = 5000;
+    roomWidth: number = 500;
+    roomHeight: number = 200;
+    roomDepth: number = 500;
     userPosition: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
 
     constructor(game: Game, dimensions: number) {
