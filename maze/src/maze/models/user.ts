@@ -46,6 +46,7 @@ export class User extends MapSite {
     loaded = new Subject<User>();
     activity = new Subject<User>();
     environment: MapSite[] = [];
+    previousPosition: THREE.Vector3 = new THREE.Vector3(0,0,0);
 
     constructor(
         game: Game,
@@ -85,6 +86,7 @@ export class User extends MapSite {
 
 
     private move(): void {
+        this.previousPosition.copy(this.model.scene.position.clone());
         this.camera.position.add(this.velocity);
         this.model.scene.position.add(this.velocity);
         this.alignCamera();
@@ -338,31 +340,63 @@ export class User extends MapSite {
         return this.localYAxis.clone().multiplyScalar(this.velocity.y);
     }
 
-    Touch(userBox: THREE.Box3, mesh: THREE.Mesh, meshBox: THREE.Box3, forwardVector: THREE.Vector3): void {
-        const userBottomY = userBox.min.y;
-        const objectTopY = meshBox.max.y;
-        const threshold = 1;
-        const overheadDiff = Math.abs(userBottomY - objectTopY);
+Touch(
+    userBox: THREE.Box3,
+    mesh: THREE.Mesh,
+    meshBox: THREE.Box3,
+    forwardVector: THREE.Vector3
+): void {
+    const userBottomY = userBox.min.y;
+    const objectTopY = meshBox.max.y;
+    const threshold = 1;
+    const overheadDiff = Math.abs(userBottomY - objectTopY);
 
-        if ((overheadDiff < threshold || (userBottomY < objectTopY && threshold < 10)) && this.velocity.y < 0) {
-            console.log("Landed on top at diff", overheadDiff);
-            this.velocity.y = 0;
-            this.model.scene.position.y = objectTopY + (mesh.geometry.boundingBox!.max.y - mesh.geometry.boundingBox!.min.y);
-        }
+    // Handle landing on top
+    if ((overheadDiff < threshold || (userBottomY < objectTopY && threshold < 10)) && this.velocity.y < 0) {
+        console.log("Landed on top at diff", overheadDiff);
+        this.velocity.y = 0;
+        this.model.scene.position.y = objectTopY + (mesh.geometry.boundingBox!.max.y - mesh.geometry.boundingBox!.min.y);
+        return;
+    }
 
-        if (userBox.intersectsBox(meshBox)) {
-            const penetrationDepthX = Math.min(Math.abs(userBox.max.x - meshBox.min.x), Math.abs(userBox.min.x - meshBox.max.x));
-            const penetrationDepthZ = Math.min(Math.abs(userBox.max.z - meshBox.min.z), Math.abs(userBox.min.z - meshBox.max.z));
+    // Use previous position to determine rollback direction
+    let rollbackVector = this.model.scene.position.clone().sub(this.previousPosition).normalize();
 
-            if (penetrationDepthX < penetrationDepthZ) {
-                console.log("Side collision: Blocking X movement");
-                this.velocity.x = 0;
-            } else {
-                console.log("Side collision: Blocking Z movement");
-                this.velocity.z = 0;
-            }
-        }
+    // Compute penetration depths
+    const penetrationX1 = userBox.max.x - meshBox.min.x;
+    const penetrationX2 = meshBox.max.x - userBox.min.x;
+    const penetrationZ1 = userBox.max.z - meshBox.min.z;
+    const penetrationZ2 = meshBox.max.z - userBox.min.z;
+
+    const penetrationDepthX = Math.min(penetrationX1, penetrationX2);
+    const penetrationDepthZ = Math.min(penetrationZ1, penetrationZ2);
+
+    let correctionVector = new THREE.Vector3();
+
+    // Handle corner collisions by resolving both X and Z if needed
+    if (penetrationDepthX < penetrationDepthZ * 1.1 && penetrationDepthZ < penetrationDepthX * 1.1) {
+        // Both penetration depths are small → corner case → move out diagonally
+        let normalX = penetrationX1 < penetrationX2 ? -1 : 1;
+        let normalZ = penetrationZ1 < penetrationZ2 ? -1 : 1;
+        correctionVector.set(
+            normalX * penetrationDepthX * 1.01,
+            0,
+            normalZ * penetrationDepthZ * 1.01
+        );
+    } else if (penetrationDepthX < penetrationDepthZ) {
+        // Resolve X penetration
+        let normalX = penetrationX1 < penetrationX2 ? -1 : 1;
+        correctionVector.set(normalX * penetrationDepthX * 1.01, 0, 0);
+    } else {
+        // Resolve Z penetration
+        let normalZ = penetrationZ1 < penetrationZ2 ? -1 : 1;
+        correctionVector.set(0, 0, normalZ * penetrationDepthZ * 1.01);
+    }
+
+    // Apply the correction to move the player outside the wall/corner
+    this.model.scene.position.add(correctionVector);
 }
+
 
 
 }
