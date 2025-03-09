@@ -26,6 +26,7 @@ export class Floor extends MapSite {
             new THREE.BoxGeometry(this.width, this.floorDepth, this.depth),
             new THREE.MeshStandardMaterial({
                 map: floorTexture,
+                // wireframe: true,
                 side: THREE.DoubleSide
             })
         );

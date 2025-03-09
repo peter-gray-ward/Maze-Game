@@ -190,7 +190,7 @@ export class User extends MapSite {
             this.velocity.copy(newVelocity);
 
             // Stop animation if no movement keys are held
-            if (!this.actions.w && !this.actions.s && !this.actions.a && !this.actions.d) {
+            if (this.animations.walk && !this.actions.w && !this.actions.s && !this.actions.a && !this.actions.d) {
                 this.animations.walk.speedFactor = 0;
                 this.startAnimation('lounge');
             }
@@ -347,6 +347,8 @@ export class User extends MapSite {
         meshBox: THREE.Box3,
         forwardVector: THREE.Vector3
     ): void {
+        if (mesh.name == 'no-collision') return;
+        
         const userBottomY = userBox.min.y;
         const objectTopY = meshBox.max.y;
         const threshold = 1;

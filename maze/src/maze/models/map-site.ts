@@ -111,8 +111,27 @@ export abstract class MapSite {
         if (this.active) {
             for (let child of this.scene.children) {
                 this.game.scene.remove(child);
+                this.Dispose(child as (THREE.Group | THREE.Mesh));
             }
         }
         this.active = false;
+    }
+
+
+    Dispose(child: THREE.Group | THREE.Mesh) {
+        if (child instanceof THREE.Group) {
+            for (let grandchild of child.children) {
+                this.Dispose(grandchild as (THREE.Group | THREE.Mesh));
+            }
+        } else if (child instanceof THREE.Mesh) {
+            child.geometry.dispose();
+            if (child.material instanceof THREE.Material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach((mat) => mat.dispose());
+                } else {
+                    child.material.dispose();
+                }
+            }
+        }
     }
 }

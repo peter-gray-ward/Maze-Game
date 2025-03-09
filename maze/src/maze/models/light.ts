@@ -43,10 +43,12 @@ export class CeilingLight extends Light {
 
 
         const points = [];
+        let scale = 10;
+        let halfScale = scale / 2;
         for ( let i = 0; i < 10; i ++ ) {
-            points.push( new THREE.Vector2( Math.sin( i * 0.2 ) * 10 + 5, ( i - 5 ) * 2 ) );
+            points.push( new THREE.Vector2( Math.sin( i * 0.2 ) * scale + halfScale, ( i - halfScale ) * 2 ) );
         }
-        const geometry = new THREE.LatheGeometry( points );
+        const geometry = new THREE.LatheGeometry( points, 30 );
         const material = new THREE.MeshStandardMaterial( { color: 'slategray', side: THREE.DoubleSide } );
         const lathe = new THREE.Mesh( geometry, material );
         lathe.castShadow = true;

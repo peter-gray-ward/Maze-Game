@@ -83,6 +83,10 @@ export class MazeComponent {
     });
   }
 
+  ngOnDestroy() {
+    this.game.cleanup();
+  }
+
   trackById(index: number, room: Room): string {
     return room.id.join('-');
   }

@@ -10,6 +10,7 @@ import { Door } from './door';
 import { Wall } from './wall';
 import { CeilingLight, Light } from './light';
 import { Game } from '../singletons/game';
+import { BookShelf } from './book-shelf';
 
 export class Room extends MapSite {
     floor!: Floor;
@@ -44,7 +45,7 @@ export class Room extends MapSite {
 
         super.Build();
         
-
+        // Floor
         this.floor = new Floor.FloorBuilder()
             .game(this.game)
             .id(this.id.concat([0]))
@@ -56,9 +57,9 @@ export class Room extends MapSite {
             .text("I'm a floor!")
             .build();
         this.floor.Build();
-
         this.scene.add(this.floor.scene);
 
+        // Ceiling
         this.ceiling = new Ceiling.CeilingBuilder()
             .game(this.game)
             .id(this.id.concat([0]))
@@ -70,10 +71,9 @@ export class Room extends MapSite {
             .text("I'm a ceiling!")
             .build();
         this.ceiling.Build();
-
         this.scene.add(this.ceiling.scene);
 
-        
+        // Ceiling Light
         this.lights.push(
             new CeilingLight.LightBuilder()
             .game(this.game)
@@ -92,7 +92,8 @@ export class Room extends MapSite {
             this.scene.add(light.scene);
         }
         
-
+        // Walls
+        let setBookshelf = false;
         for (let s of this.children) {
             if (s instanceof Side) {
                 let side: Side = s instanceof Wall ? 
@@ -117,6 +118,7 @@ export class Room extends MapSite {
                         .text("I'm a door!")
                         .build()
 
+
                 side.Build();
                 switch (s.direction) {
                     case Direction.East:
@@ -138,16 +140,68 @@ export class Room extends MapSite {
                 }
                 
                 this.scene.add(side.scene);
+
+                if (!setBookshelf && s instanceof Wall) {
+                    setBookshelf = true; // Prevent multiple bookshelf creation
+
+                    // BookShelves (3 per wall)
+                    let halfHeight = this.height / 2;
+                    for (let i = 1; i < 2; i++) {
+
+                        let bookshelfBoardWidth: number = 1;
+                        let bookshelfWidth: number = this.width / 3 - bookshelfBoardWidth;
+                        let bookshelfHeight: number = Math.random() * (this.height - halfHeight) + halfHeight;
+
+                        // Calculate bookshelf position along the wall
+                        let bookshelfPositionX = s.position.x + (i - 1) * (this.width / 3); // Adjust for 3 bookshelves
+                        let bookshelfPositionY = bookshelfHeight / 2; // Set at a reasonable height
+                        let bookshelfPositionZ = s.position.z; // Keep the same z-depth
+                        let bookshelfDepth = 12;
+                        let bookshelf: BookShelf = new BookShelf.BookShelfBuilder()
+                            .game(this.game)
+                            .id(this.id.concat([0, i]))
+                            .position(new THREE.Vector3(bookshelfPositionX, bookshelfPositionY, bookshelfPositionZ))
+                            .width(bookshelfWidth)
+                            .height(bookshelfHeight)
+                            .depth(bookshelfDepth)
+                            .color('brown')
+                            .text("I'm a bookshelf!")
+                            .build();
+
+                        bookshelf.Build();
+
+                        let offset = bookshelfDepth + bookshelfBoardWidth;
+                        // Adjust bookshelf placement based on the wall's direction
+                        switch (s.direction) {
+                            case Direction.East:
+                                bookshelf.scene.translateZ(this.depth / 2);
+                                bookshelf.scene.translateX(offset);
+                                break;
+                            case Direction.West:
+                                bookshelf.scene.translateZ(-this.depth / 2);
+                                bookshelf.scene.translateX(-offset);
+                                break;
+                            case Direction.South:
+                                bookshelf.scene.translateX(this.width / 2);
+                                bookshelf.scene.rotateY(Math.PI / 2);
+                                bookshelf.scene.translateZ(-offset);
+                                break;
+                            case Direction.North:
+                                bookshelf.scene.translateX(-this.width / 2);
+                                bookshelf.scene.rotateY(Math.PI / 2);
+                                bookshelf.scene.translateZ(offset);
+                                break;
+                            default:
+                                break;
+                        }
+
+                        this.scene.add(bookshelf.scene);
+                    }
+                }
+
             }
         }
 
-
-
-        const boardGeometry = new THREE.BoxGeometry(30, 10.5, 0.5);
-        const boardMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
-        const board = new THREE.Mesh(boardGeometry, boardMaterial);
-        board.position.copy(this.position.clone().add(new THREE.Vector3(0, -this.height / 2, 0)));
-        this.scene.add(board);
 
         const loader = new FontLoader();
         loader.load("/helvetica.json", (font) => {
