@@ -9,6 +9,55 @@
     }
 }
 
+#engagement, #target {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 2rem;
+    font-family: Helvetica;
+    padding: 2rem;
+    z-index: 10;
+}
+
+#target {
+    height: 10vh;
+}
+
+#engagement {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    > button {
+        width: 2rem;
+        height: 2rem;
+        position: absolute;
+        left: calc(95% - 2rem);
+        top: 5%;
+    }
+
+    article {
+        width: 90%;
+        height: 90%;
+        background: whitesmoke;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        iframe {
+            border: none !important;
+            outline: none !important;
+            background: white !important;
+        }
+    }
+}
+
 #loading-screen  {
     position: absolute;
     z-index: 100;

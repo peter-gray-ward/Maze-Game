@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import { Game } from '../singletons/game';
 import { MapSite } from './map-site';
-import { fromEvent, Subject } from 'rxjs';
-import { Injectable } from '@angular/core';
+import { fromEvent, Subject, BehaviorSubject } from 'rxjs';
+import { inject, Injectable, Sanitizer, SecurityContext } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { getAllDescendants } from '../utils/object';
 import { BookShelf } from './book-shelf';
+import { Book, IBook } from './book';
 
 export interface GLTFModel {
 	animations: any[];
@@ -24,6 +26,14 @@ export interface UserPosition {
     left: number;
     top: number;
 }
+
+export interface Target {
+    mesh: THREE.Mesh;
+    mapSite: MapSite;
+    message: string;
+    data: any;
+    content: string;
+};
 
 export class User extends MapSite {
     model!: GLTFModel;
@@ -50,6 +60,11 @@ export class User extends MapSite {
     environment: MapSite[] = [];
     previousPosition: THREE.Vector3 = new THREE.Vector3(0,0,0);
     currentRoomId: number[] = [];
+    targetSubject = new BehaviorSubject<Target|null>(null);
+    target$ = this.targetSubject.asObservable();
+    engagementSubject = new BehaviorSubject<Target|null>(null);
+    public engagement$ = this.engagementSubject.asObservable();
+    private sanitizer = inject(DomSanitizer);
 
     constructor(
         game: Game,
@@ -202,6 +217,8 @@ export class User extends MapSite {
         const mouse = new THREE.Vector2();
         const raycaster = new THREE.Raycaster();
         fromEvent(window, 'mousemove').subscribe((event: any) => {
+            if (this.engagementSubject.value) return;
+
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -228,21 +245,52 @@ export class User extends MapSite {
                     let mesh = intersects[0].object;
                     
                     for (let item of currentRoom.items) {
+
+
                         if (item instanceof BookShelf) {
+                            let target: Target|null = null;
                             for (let book of item.books) {
                                 if (book.scene.uuid == mesh.uuid && !book.hovered) {
                                     item.Mouseover(mesh as THREE.Mesh);
+                                    const iFrameSrc = ((book as Book).book as IBook).formats['text/html'];
+                                    target = { 
+                                        mesh: mesh as THREE.Mesh, 
+                                        mapSite: book as MapSite,
+                                        data: (book as Book).book,
+                                        message: `${(book as Book).book.title} (${(book as Book).book.topic})`,
+                                        content: this.sanitizer.bypassSecurityTrustHtml(`<iframe src="${iFrameSrc}" width="90%" height="90%" style="background:white"></iframe>`)
+                                    } as Target;
+                                    console.log(target)
                                 } else if (book.hovered) {
                                     item.Mouseleave();
                                 }
                             }
-                            
+                            if ((!this.targetSubject.value && target)
+                                || (this.targetSubject.value && !target)
+                                || (target && this.targetSubject.value && target.mesh.uuid !== this.targetSubject.value.mesh.uuid)) {
+                                this.targetSubject.next(target);
+                            }
                         }
+
+
+
                     }
 
                     
                 }
             }
+        });
+
+        fromEvent(window, 'mousedown').subscribe((event: any) => {
+            if (!this.engagementSubject.value && this.targetSubject.value) {
+                const val = this.targetSubject.value;
+                this.targetSubject.next(null);
+                this.engagementSubject.next(val);
+            }
+        });
+
+        fromEvent(window, 'mouseup').subscribe((event: any) => {
+            this.targetSubject.next(null);
         });
 
     }

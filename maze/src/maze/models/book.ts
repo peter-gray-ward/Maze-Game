@@ -9,13 +9,14 @@ export interface IBook {
     uuid?: string;
 	title: string;
 	authors: any[];
-	sumaries: string[];
+	summaries: string[];
 	subjects: string[];
 	bookshelves: string[];
 	languages: string[];
+    topic: string;
 	formats: {
 		[key: string]: string
-	}[];
+	};
 };
 
 export const MaxBookHeight: number = 12;

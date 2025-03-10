@@ -17,3 +17,10 @@
   {{ userPosition().z.toFixed(1) }}</pre>
   </div>
 </div>
+<div *ngIf="target" id="target">
+  {{ target.message }}
+</div>
+<div *ngIf="engagement" id="engagement">
+  <button id="exit-engagement" (click)="exitEngagement()">X</button>
+  <article [innerHTML]="engagement.content" [style.background]="engagement.mapSite.color"></article>
+</div>

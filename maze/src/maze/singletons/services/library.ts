@@ -82,7 +82,12 @@ export class LibraryService {
 	}
 
 	static libraryStack(lib: Library): IBook[] {
-		return LibraryService.shuffle(Object.keys(lib).map(topic => lib[topic]).flat());
+		return LibraryService.shuffle(Object.keys(lib).map(topic => {
+			return lib[topic].map((book: IBook) => {
+				book.topic = topic;
+				return book;
+			});
+		}).flat());
 	}
 
 }

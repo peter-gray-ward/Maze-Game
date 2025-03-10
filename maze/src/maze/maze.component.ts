@@ -1,4 +1,5 @@
-import { Component, inject, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, ViewChild, ElementRef,
+  Sanitizer, SecurityContext } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MapSite } from './models/map-site';
@@ -9,7 +10,7 @@ import { Wall } from './models/wall';
 import { DirectionType, Direction, OppositeDirection, OtherDirections } from './constants/direction';
 import { RoomComponent } from './components/room/room.component';
 import * as THREE from 'three';
-import { User, UserPosition } from './models/user';
+import { User, UserPosition, Target } from './models/user';
 import { Game } from './singletons/game';
 import { KeyOf } from './utils/object';
 
@@ -34,6 +35,8 @@ export class MazeComponent {
   userAnimations: any = [];
   game: Game = inject(Game);
   loaded: boolean = false;
+  target: Target | null = null;
+  engagement: Target | null = null;
 
   constructor() {
     this.maze = new Maze(this.game, this.dimensions);
@@ -75,6 +78,9 @@ export class MazeComponent {
         }));
         this.userAnimations = Object.keys(user.animations)
           .filter(animation => user.animations[animation] && user.animations[animation].speedFactor);
+
+        this.user.target$.subscribe((target: Target | null) => this.target = target);
+        this.user.engagement$.subscribe((target: Target | null) => this.engagement = target);
       });
       this.generateMaze();
       this.build3DMaze();
@@ -303,5 +309,9 @@ export class MazeComponent {
       room.Build();
     }
     this.game.levels.push(this.maze);
+  }
+
+  exitEngagement() {
+    this.game.user.engagementSubject.next(null);
   }
 }
