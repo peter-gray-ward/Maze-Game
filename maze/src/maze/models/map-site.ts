@@ -160,7 +160,7 @@ export abstract class MapSite {
         if (temporary) {
             setTimeout(() => {
                 this.Mouseleave();
-            }, 5000);
+            }, 500);
         }
     }
 

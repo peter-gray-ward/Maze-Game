@@ -12,7 +12,7 @@ import { RoomComponent } from './components/room/room.component';
 import * as THREE from 'three';
 import { User, UserPosition, Target } from './models/user';
 import { Game } from './singletons/game';
-import { KeyOf } from './utils/object';
+import { KeyOf, getAllDescendants } from './utils/object';
 
 @Component({
   selector: 'maze-root',
@@ -104,6 +104,17 @@ export class MazeComponent {
       this.game.renderer.domElement.style.display = 'flex';
     } else {
       this.game.renderer.domElement.style.display = 'none';
+    }
+  }
+
+  toggleFirstPerson() {
+    this.user.firstPerson = !this.user.firstPerson;
+    if (this.user.firstPerson) {
+      this.user.model.scene.visible = false;
+      this.user.cameraRadius = 0;
+    } else {
+      this.user.model.scene.visible = true
+      this.user.cameraRadius = 144;
     }
   }
 

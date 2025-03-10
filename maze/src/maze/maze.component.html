@@ -10,7 +10,9 @@
     <span id="map-icon"></span>
     <a (click)="toggleMap()">{{toggle.map ? 'Hide ' : 'Show '}}Map</a>
   </div>
-
+  <div *ngIf="user">
+    <a (click)="toggleFirstPerson()">{{user.firstPerson ? '3rd Person ' : '1st Person '}}</a>
+  </div>
   <div>
     <pre [style.font-size.px]="10">
   {{ userPosition().x.toFixed(1) }}, 

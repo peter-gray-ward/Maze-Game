@@ -37,6 +37,7 @@ export interface Target {
 
 export class User extends MapSite {
     model!: GLTFModel;
+    firstPerson: boolean = false;
     camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
     speed: number = 3;
     rotationSpeed: number = Math.PI / 11;
@@ -117,16 +118,26 @@ export class User extends MapSite {
         if (headBone) {
             const headPosition = headBone.getWorldPosition(new THREE.Vector3());
             const forwardDir = this.model.scene.getWorldDirection(new THREE.Vector3());
-            const backwardDir = forwardDir.clone().negate();
-            const cameraRadius = this.cameraRadius * Math.pow(this.cameraTheta, 8);
-            const verticalOffset = this.localYAxis.clone().multiplyScalar(Math.sin(this.cameraTheta) * cameraRadius);
-            const backwardOffset = backwardDir.clone().multiplyScalar(Math.cos(this.cameraTheta) * cameraRadius);
-            const cameraPosition = headPosition.clone()
-                .add(verticalOffset)  // Move up/down
-                .add(backwardOffset); // Move closer/further behind
-            this.camera.position.copy(cameraPosition);
+            let lookPosition;
+            if (!this.firstPerson) {
+                const backwardDir = forwardDir.clone().negate();
+                const cameraRadius = this.cameraRadius * Math.pow(this.cameraTheta, 8);
+                const verticalOffset = this.localYAxis.clone().multiplyScalar(Math.sin(this.cameraTheta) * cameraRadius);
+                const backwardOffset = backwardDir.clone().multiplyScalar(Math.cos(this.cameraTheta) * cameraRadius);
+                const cameraPosition = headPosition.clone()
+                    .add(verticalOffset)  // Move up/down
+                    .add(backwardOffset); // Move closer/further behind
+                this.camera.position.copy(cameraPosition);
 
-            const lookPosition = headPosition.add(new THREE.Vector3(0, 80, 0))//.add(forwardDir.multiplyScalar(3000 * (1 / this.cameraTheta)))
+                lookPosition = headPosition.clone().add(new THREE.Vector3(0, 80, 0));
+            } else {
+                this.camera.position.copy(headPosition.clone().add(new THREE.Vector3(0, 70, 0)));
+                const rightDir = new THREE.Vector3().crossVectors(forwardDir, this.localYAxis).normalize();
+                const quaternion = new THREE.Quaternion().setFromAxisAngle(rightDir, -this.cameraTheta * 10);
+                const rotatedLookDir = forwardDir.clone().applyQuaternion(quaternion).normalize();
+
+                lookPosition = headPosition.clone().add(rotatedLookDir.multiplyScalar(-1000));
+            }
             this.camera.lookAt(lookPosition);
         }
     }
@@ -251,6 +262,7 @@ export class User extends MapSite {
 
                         if (item instanceof BookShelf) {
                             let target: Target|null = null;
+                            foundItem = true;
                             for (let book of item.books) {
                                 if (book.scene.uuid == mesh.uuid && !book.hovered) {
                                     item.Mouseover(mesh as THREE.Mesh);
@@ -269,7 +281,6 @@ export class User extends MapSite {
                             if ((!this.targetSubject.value && target)
                                 || (this.targetSubject.value && !target)
                                 || (target && this.targetSubject.value && target.mesh.uuid !== this.targetSubject.value.mesh.uuid)) {
-                                foundItem = true;
                                 this.targetSubject.next(target);
                             }
                         }
