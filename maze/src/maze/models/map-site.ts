@@ -21,6 +21,7 @@ export abstract class MapSite {
         0
     );
     public friction: number = 0.0;
+    public hovered: boolean = false;
 
     constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
         this.game = game;
@@ -133,5 +134,27 @@ export abstract class MapSite {
                 }
             }
         }
+    }
+
+    Mouseover(target: THREE.Mesh) {
+        this.hovered = false;
+        for (let child of this.scene.children) {
+            if (child instanceof THREE.Box3Helper) {
+                this.hovered = true;
+            }
+        }
+        if (!this.hovered) {
+            this.box.setFromObject(target);
+            this.game.scene.add(new THREE.Box3Helper(this.box, 'lawngreen'));
+        }
+    }
+
+    Mouseleave() {
+        for (let child of this.scene.children) {
+            if (child instanceof THREE.Box3Helper) {
+                this.game.scene.remove(child);
+            }
+        }
+        this.hovered = false;
     }
 }

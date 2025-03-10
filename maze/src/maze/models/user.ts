@@ -5,6 +5,7 @@ import { fromEvent, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { getAllDescendants } from '../utils/object';
+import { BookShelf } from './book-shelf';
 
 export interface GLTFModel {
 	animations: any[];
@@ -210,7 +211,8 @@ export class User extends MapSite {
 
             if (currentRoom) {
                 currentRoom.scene.updateWorldMatrix(true, true);
-                let allRoomChildren = getAllDescendants(currentRoom.scene);
+                let allRoomChildren = getAllDescendants(currentRoom.scene).filter(c => /mouseable/.test(c.name))
+
                 allRoomChildren.forEach((child) => {
                     if (child instanceof THREE.Mesh) {
                         child.updateWorldMatrix(true, true);
@@ -219,11 +221,25 @@ export class User extends MapSite {
                     }
                 });
 
+
                 const intersects = raycaster.intersectObjects(allRoomChildren);
 
                 if (intersects.length > 0) {
+                    let mesh = intersects[0].object;
+                    
+                    for (let item of currentRoom.items) {
+                        if (item instanceof BookShelf) {
+                            for (let book of item.books) {
+                                if (book.scene.uuid == mesh.uuid && !book.hovered) {
+                                    item.Mouseover(mesh as THREE.Mesh);
+                                } else if (book.hovered) {
+                                    item.Mouseleave();
+                                }
+                            }
+                            
+                        }
+                    }
 
-                    console.log('Intersected object:', intersects[0].object);
                     
                 }
             }

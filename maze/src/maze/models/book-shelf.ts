@@ -11,6 +11,8 @@ const mahoganyTexture = new THREE.TextureLoader().load("/mahogany.jpg", texture 
 });
 
 export class BookShelf extends MapSite {
+    public books: MapSite[] = [];
+
 	constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
         super(game, id, position, width, height, depth, color, text);
     }
@@ -50,7 +52,6 @@ export class BookShelf extends MapSite {
                 new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, map: mahoganyTexture })
             );
             shelf.position.copy(this.position.clone().add(new THREE.Vector3(0, shelfY, 0)));
-            shelf.name = "mouseable";
             bookshelf.add(shelf);
 
             // **Add Books on this shelf**
@@ -74,7 +75,7 @@ export class BookShelf extends MapSite {
                     libraryStack = LibraryService.libraryStack(this.game.library);
                 }
 
-                let libBook = this.game.library
+                let libBook: IBook = libraryStack.shift() as IBook;
                 let book = new Book.BookBuilder()
                     .game(this.game)
                     .id(this.id.concat([i]))
@@ -88,12 +89,14 @@ export class BookShelf extends MapSite {
                     .depth(bookDepth)
                     .color(bookColor)
                     .text("Random Book")
-                    .book(libraryStack.shift() as IBook)
+                    .book(libBook)
                     .build();
 
                 
 
                 book.Build();
+
+                this.books.push(book);
 
                 bookshelf.add(book.scene);
 

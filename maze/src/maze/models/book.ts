@@ -6,6 +6,7 @@ import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 
 export interface IBook {
 	id: number;
+    uuid?: string;
 	title: string;
 	authors: any[];
 	sumaries: string[];
@@ -64,4 +65,6 @@ export class Book extends MapSite {
 
         }
     }
+
+    
 }

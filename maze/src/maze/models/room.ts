@@ -11,11 +11,13 @@ import { Wall } from './wall';
 import { CeilingLight, Light } from './light';
 import { Game } from '../singletons/game';
 import { BookShelf } from './book-shelf';
+import { IBook } from './book';
 
 export class Room extends MapSite {
     floor!: Floor;
     ceiling!: Ceiling;
     lights: Light[] = [];
+    items: any[] = [];
     visited: boolean = false;
 
     constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
@@ -169,6 +171,7 @@ export class Room extends MapSite {
                             .build();
 
                         bookshelf.Build();
+                        this.items.push(bookshelf);
 
                         let offset = bookshelfDepth + bookshelfBoardWidth;
                         // Adjust bookshelf placement based on the wall's direction
