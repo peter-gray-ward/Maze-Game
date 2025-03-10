@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Injectable, inject, Inject } from '@angular/core';
 import { User } from '../models/user';
+import { Maze } from '../models/maze';
 import { MapSite } from '../models/map-site';
 import { fromEvent } from 'rxjs';
 import { LibraryService, Library } from './services/library';
@@ -9,6 +10,7 @@ import { LibraryService, Library } from './services/library';
     providedIn: 'root'
 })
 export class Game {
+    public maze!: Maze;
     scene!: THREE.Scene;
     public renderer!: THREE.WebGLRenderer;
     levels: any[] = [];
@@ -20,8 +22,9 @@ export class Game {
         libraryService.library$.subscribe((lib: Library) => this.library = lib);
     }
 
-    init(user: User) {
+    init(user: User, maze: Maze) {
         this.user = user;
+        this.maze = maze;
         this.scene = new THREE.Scene();
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setPixelRatio(window.devicePixelRatio);

@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { Game } from '../singletons/game';
 import { MapSite } from './map-site';
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 
 export interface IBook {
 	id: number;
@@ -41,11 +43,9 @@ export class Book extends MapSite {
         });
         const bookMesh = new THREE.Mesh(bookGeometry, bookMaterial);
         bookMesh.position.copy(this.position);
-
-
+        bookMesh.geometry.computeBoundingBox();
         this.scene = bookMesh
-
-        this.scene.name = 'no-collision';
+        this.scene.name = 'no-collision|mouseable';
         
     }
 
@@ -54,6 +54,7 @@ export class Book extends MapSite {
 
     	book(_book: IBook) {
     		this._book = _book;
+    		return this;
     	}
         build(): Book {
             if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined || this._book === undefined) {

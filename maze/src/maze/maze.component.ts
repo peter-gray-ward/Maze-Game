@@ -79,7 +79,7 @@ export class MazeComponent {
       this.generateMaze();
       this.build3DMaze();
       this.maze.init(user);
-      this.game.init(user);
+      this.game.init(user, this.maze);
     });
   }
 

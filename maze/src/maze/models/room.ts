@@ -202,7 +202,6 @@ export class Room extends MapSite {
             }
         }
 
-
         const loader = new FontLoader();
         loader.load("/helvetica.json", (font) => {
             const textGeometry = new TextGeometry(this.id.join('-'), {

@@ -4,6 +4,7 @@ import { MapSite } from './map-site';
 import { fromEvent, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { getAllDescendants } from '../utils/object';
 
 export interface GLTFModel {
 	animations: any[];
@@ -47,6 +48,7 @@ export class User extends MapSite {
     activity = new Subject<User>();
     environment: MapSite[] = [];
     previousPosition: THREE.Vector3 = new THREE.Vector3(0,0,0);
+    currentRoomId: number[] = [];
 
     constructor(
         game: Game,
@@ -196,6 +198,37 @@ export class User extends MapSite {
             }
         });
 
+        const mouse = new THREE.Vector2();
+        const raycaster = new THREE.Raycaster();
+        fromEvent(window, 'mousemove').subscribe((event: any) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, this.camera);
+
+            const currentRoom = this.game.maze.rooms.find(room => room.id.join(',') == this.currentRoomId.join(','));
+
+            if (currentRoom) {
+                currentRoom.scene.updateWorldMatrix(true, true);
+                let allRoomChildren = getAllDescendants(currentRoom.scene);
+                allRoomChildren.forEach((child) => {
+                    if (child instanceof THREE.Mesh) {
+                        child.updateWorldMatrix(true, true);
+                        child.geometry.computeBoundingBox();
+                        child.geometry.computeBoundingSphere();
+                    }
+                });
+
+                const intersects = raycaster.intersectObjects(allRoomChildren);
+
+                if (intersects.length > 0) {
+
+                    console.log('Intersected object:', intersects[0].object);
+                    
+                }
+            }
+        });
+
     }
 
 
@@ -316,21 +349,24 @@ export class User extends MapSite {
         let sidewaysVector = new THREE.Vector3();
         sidewaysVector.crossVectors(this.camera.up, forwardVector).normalize();
         
-        const EngageMeshes = (item: THREE.Group | THREE.Mesh) => {
+        const EngageMeshes = (item: THREE.Group | THREE.Mesh, id: number[]) => {
             if (item instanceof THREE.Group) {
                 for (let child of item.children) {
-                    EngageMeshes(child as (THREE.Group | THREE.Mesh));
+                    EngageMeshes(child as (THREE.Group | THREE.Mesh), id);
                 }
             } else {
                 const meshBox = new THREE.Box3().setFromObject(item);
                 if (userBox.intersectsBox(meshBox)) {
+
+                    this.currentRoomId = id;
                     this.Touch(userBox, item, meshBox, forwardVector);
+
                 }
             }
         }
 
         for (let mapSite of environment) {
-            EngageMeshes(mapSite.scene);
+            EngageMeshes(mapSite.scene, mapSite.id);
         }
         
         this.model.scene.position.add(fallVector);
@@ -347,7 +383,7 @@ export class User extends MapSite {
         meshBox: THREE.Box3,
         forwardVector: THREE.Vector3
     ): void {
-        if (mesh.name == 'no-collision') return;
+        if (/no\-collision/.test(mesh.name)) return;
         
         const userBottomY = userBox.min.y;
         const objectTopY = meshBox.max.y;

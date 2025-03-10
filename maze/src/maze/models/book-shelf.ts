@@ -1,7 +1,8 @@
 import * as THREE from "three";
-import { Book, BookHeight, MaxBookHeight } from './book';
+import { IBook, Book, BookHeight, MaxBookHeight } from './book';
 import { Game } from '../singletons/game';
 import { MapSite } from './map-site';
+import { LibraryService } from '../singletons/services/library';
 
 const mahoganyTexture = new THREE.TextureLoader().load("/mahogany.jpg", texture => {
     texture.wrapS = THREE.RepeatWrapping;
@@ -20,7 +21,7 @@ export class BookShelf extends MapSite {
 
     override Build() {
         super.Build();
-        this.scene.name = this.id.join(',');
+        this.scene.name = "mouseable";
 
         let shelfCount = Math.floor(this.height / MaxBookHeight);
         const bookshelfGeometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
@@ -40,15 +41,17 @@ export class BookShelf extends MapSite {
         const halfHeight = this.height / 2;
         const halfWidth = this.width / 2;
 
-        for (let i = 0; i < shelfCount; i++) {
+
+        for (let i = 1; i < shelfCount; i++) {
             // Create a shelf
-            let shelfY = (i * MaxBookHeight) - halfHeight;
+            let shelfY = (i * MaxBookHeight) - this.height;
             let shelf = new THREE.Mesh(
                 new THREE.BoxGeometry(this.width, 1, this.depth),
                 new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, map: mahoganyTexture })
             );
             shelf.position.copy(this.position.clone().add(new THREE.Vector3(0, shelfY, 0)));
-            this.scene.add(shelf);
+            shelf.name = "mouseable";
+            bookshelf.add(shelf);
 
             // **Add Books on this shelf**
             let remainingWidth = this.width; 
@@ -57,8 +60,9 @@ export class BookShelf extends MapSite {
             let bookCount = 0;
             
             let j = 0;
+            let libraryStack: IBook[] = LibraryService.libraryStack(this.game.library);
             while (remainingWidth) {
-                let colors = ['maroon', 'royalblue', 'darkgreen', 'yellow', 'deeppurple', 'burgandy', 'white'];
+                let colors = ["#800000", "#2B1B17", "#013220", "#A67C00", "#4B0082", "#5C0002", "#E5E4E2"];
                 let bookColor = colors[Math.floor(Math.random() * colors.length)];
                 let bookWidth = Math.floor(Math.random() * (MaxBookHeight / 3) + (MaxBookHeight / 3));
                 let bookHeight = Math.floor(Math.random() * (MaxBookHeight / 2) + (MaxBookHeight / 2));
@@ -66,26 +70,32 @@ export class BookShelf extends MapSite {
 
                 if (remainingWidth - bookDepth < 0) break;
 
+                if (libraryStack.length == 0) {
+                    libraryStack = LibraryService.libraryStack(this.game.library);
+                }
+
+                let libBook = this.game.library
                 let book = new Book.BookBuilder()
                     .game(this.game)
                     .id(this.id.concat([i]))
                     .position(new THREE.Vector3(
-                        bookX + bookDepth, 
+                        bookX + bookDepth / 2, 
                         shelf.position.y + bookHeight / 2, 
-                        this.position.z + (Math.abs(this.depth - bookWidth))
+                        this.position.z
                     ))
                     .width(bookWidth)
                     .height(bookHeight)
                     .depth(bookDepth)
                     .color(bookColor)
                     .text("Random Book")
+                    .book(libraryStack.shift() as IBook)
                     .build();
 
                 
 
                 book.Build();
 
-                this.scene.add(book.scene);
+                bookshelf.add(book.scene);
 
                 bookX += bookDepth;
                 remainingWidth -= bookDepth;
@@ -93,7 +103,7 @@ export class BookShelf extends MapSite {
         }
 
         
-        this.scene.add(bookshelf);
+        this.scene = bookshelf;
     }
 
     static BookShelfBuilder = class extends MapSite.MapSiteBuilder {

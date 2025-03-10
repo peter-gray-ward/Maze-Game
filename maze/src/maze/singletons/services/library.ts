@@ -71,4 +71,18 @@ export class LibraryService {
 			});
 	}
 
+	static shuffle(books: IBook[]) {
+		let result: IBook[] = [];
+		while (books.length) {
+			var index = Math.floor(Math.random() * books.length);
+			result.push(books[index] as IBook);
+			books.splice(index, 1);
+		}
+		return result;
+	}
+
+	static libraryStack(lib: Library): IBook[] {
+		return LibraryService.shuffle(Object.keys(lib).map(topic => lib[topic]).flat());
+	}
+
 }
