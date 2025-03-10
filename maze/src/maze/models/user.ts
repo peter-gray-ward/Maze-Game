@@ -70,13 +70,14 @@ export class User extends MapSite {
         game: Game,
         id: number[],
         position: THREE.Vector3,
+        rotation: THREE.Vector3,
         width: number,
         height: number,
         depth: number,
         color: string = "peach",
         text: string = ""
     ) {
-        super(game, id, position, width, height, depth, color, text);
+        super(game, id, position, rotation, width, height, depth, color, text);
         new GLTFLoader().load("/Xbot.glb", model => {
             this.model = model;
             this.model.scene.castShadow = true;
@@ -240,6 +241,7 @@ export class User extends MapSite {
 
 
                 const intersects = raycaster.intersectObjects(allRoomChildren);
+                let foundItem = false;
 
                 if (intersects.length > 0) {
                     let mesh = intersects[0].object;
@@ -260,7 +262,6 @@ export class User extends MapSite {
                                         message: `${(book as Book).book.title} (${(book as Book).book.topic})`,
                                         content: this.sanitizer.bypassSecurityTrustHtml(`<iframe src="${iFrameSrc}" width="90%" height="90%" style="background:white"></iframe>`)
                                     } as Target;
-                                    console.log(target)
                                 } else if (book.hovered) {
                                     item.Mouseleave();
                                 }
@@ -268,6 +269,7 @@ export class User extends MapSite {
                             if ((!this.targetSubject.value && target)
                                 || (this.targetSubject.value && !target)
                                 || (target && this.targetSubject.value && target.mesh.uuid !== this.targetSubject.value.mesh.uuid)) {
+                                foundItem = true;
                                 this.targetSubject.next(target);
                             }
                         }
@@ -278,6 +280,10 @@ export class User extends MapSite {
 
                     
                 }
+
+                if (!foundItem) {
+                    this.targetSubject.next(null);
+                }
             }
         });
 
@@ -285,7 +291,7 @@ export class User extends MapSite {
             if (!this.engagementSubject.value && this.targetSubject.value) {
                 const val = this.targetSubject.value;
                 this.targetSubject.next(null);
-                this.engagementSubject.next(val);
+                if (val.mapSite.isItem) this.engagementSubject.next(val);
             }
         });
 
@@ -413,24 +419,29 @@ export class User extends MapSite {
         let sidewaysVector = new THREE.Vector3();
         sidewaysVector.crossVectors(this.camera.up, forwardVector).normalize();
         
-        const EngageMeshes = (item: THREE.Group | THREE.Mesh, id: number[]) => {
+        const EngageMeshes = (mapSite: MapSite, item: (THREE.Group | THREE.Mesh)) => {
             if (item instanceof THREE.Group) {
                 for (let child of item.children) {
-                    EngageMeshes(child as (THREE.Group | THREE.Mesh), id);
+                    EngageMeshes(mapSite, child as (THREE.Group | THREE.Mesh));
                 }
-            } else {
+            } else  {
                 const meshBox = new THREE.Box3().setFromObject(item);
                 if (userBox.intersectsBox(meshBox)) {
-
-                    this.currentRoomId = id;
-                    this.Touch(userBox, item, meshBox, forwardVector);
-
+                    this.currentRoomId = mapSite.id;
+                    this.targetSubject.next({ 
+                        mesh: item as THREE.Mesh, 
+                        mapSite: mapSite,
+                        data: {},
+                        message: `${mapSite.text}: ${item.name}`,
+                        content: ''
+                    } as Target)
+                    this.Touch(mapSite, userBox, item, meshBox, forwardVector);
                 }
             }
         }
 
         for (let mapSite of environment) {
-            EngageMeshes(mapSite.scene, mapSite.id);
+            EngageMeshes(mapSite, mapSite.scene);
         }
         
         this.model.scene.position.add(fallVector);
@@ -442,13 +453,16 @@ export class User extends MapSite {
     }
 
     Touch(
+        mapSite: MapSite,
         userBox: THREE.Box3,
         mesh: THREE.Mesh,
         meshBox: THREE.Box3,
         forwardVector: THREE.Vector3
     ): void {
-        if (/no\-collision/.test(mesh.name)) return;
-        
+        if (/no\-collision/.test(mesh.name)) return
+
+        mapSite.Mouseover(mesh, true);
+
         const userBottomY = userBox.min.y;
         const objectTopY = meshBox.max.y;
         const threshold = 1;

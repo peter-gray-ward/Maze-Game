@@ -44,6 +44,7 @@ export class MazeComponent {
         this.game,
         [Infinity],
         new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, 0),
         -1, -1, -1,
         "peach",
         "User"

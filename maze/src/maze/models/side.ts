@@ -16,8 +16,8 @@ export class Side extends MapSite {
         this.active = active;
     }
 
-    constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
-        super(game, id, position, width, height, depth, color, text);
+    constructor(game: Game, id: number[], position: THREE.Vector3, rotation: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string, rooms: Room[], direction: DirectionType) {
+        super(game, id, position, rotation, width, height, depth, color, text);
     }
 
     GetRandomTexture(): string {

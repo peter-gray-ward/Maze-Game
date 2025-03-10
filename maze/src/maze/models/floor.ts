@@ -11,8 +11,9 @@ const floorTexture = new THREE.TextureLoader().load("/floor.jpg", texture => {
 export class Floor extends MapSite {
     public floorDepth: number = 12;
 
-    constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
-        super(game, id, position, width, height, depth, color, text);
+    constructor(game: Game, id: number[], position: THREE.Vector3, rotation: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
+        super(game, id, position, rotation, width, height, depth, color, text);
+        this.scene.name = "floor: " + id.join(",");
     }
 
     override GetRandomTexture(): string {
@@ -41,7 +42,7 @@ export class Floor extends MapSite {
             if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
                 throw new Error("Missing required properties to create a Floor.");
             }
-            return new Floor(this._game, this._id, this._position, this._width, this._height, this._depth, this._color, this._text);
+            return new Floor(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text);
         }
     }
 }

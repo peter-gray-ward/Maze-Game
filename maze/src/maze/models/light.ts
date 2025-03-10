@@ -10,8 +10,8 @@ export abstract class Light extends MapSite {
 }
 
 export class CeilingLight extends Light {
-    constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string, light: THREE.Light) {
-        super(game, id, position, width, height, depth, color, text);
+    constructor(game: Game, id: number[], position: THREE.Vector3, rotation: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string, light: THREE.Light) {
+        super(game, id, position, rotation, width, height, depth, color, text);
         this.light = light;
     }
 
@@ -92,7 +92,7 @@ export class CeilingLight extends Light {
             if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
                 throw new Error("Missing required properties to create a Floor.");
             }
-            return new CeilingLight(this._game, this._id, this._position, this._width, this._height, this._depth, this._color, this._text, this._light);
+            return new CeilingLight(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text, this._light);
         }
     }
 

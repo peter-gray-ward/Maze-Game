@@ -11,8 +11,8 @@ const ceilingTexture = new THREE.TextureLoader().load("/floor.jpg", texture => {
 export class Ceiling extends MapSite {
     public floorDepth: number = 12;
 
-    constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
-        super(game, id, position, width, height, depth, color, text);
+    constructor(game: Game, id: number[], position: THREE.Vector3, rotation: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
+        super(game, id, position, rotation, width, height, depth, color, text);
     }
 
     override GetRandomTexture(): string {
@@ -39,7 +39,7 @@ export class Ceiling extends MapSite {
             if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
                 throw new Error("Missing required properties to create a Ceiling.");
             }
-            return new Ceiling(this._game, this._id, this._position, this._width, this._height, this._depth, this._color, this._text);
+            return new Ceiling(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text);
         }
     }
 }

@@ -15,18 +15,22 @@ export abstract class MapSite {
     public height!: number;
     public depth!: number;
     public position!: THREE.Vector3;
+    public rotation!: THREE.Vector3;
     public velocity: THREE.Vector3 = new THREE.Vector3(
         0,
         GRAVITY,
         0
     );
+    public touchable: boolean = true;
     public friction: number = 0.0;
     public hovered: boolean = false;
+    public isItem: boolean = false;
 
-    constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
+    constructor(game: Game, id: number[], position: THREE.Vector3, rotation: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
         this.game = game;
         this.id = id;
         this.position = position;
+        this.rotation = rotation;
         this.width = width;
         this.height = height;
         this.depth = depth;
@@ -38,6 +42,7 @@ export abstract class MapSite {
         public _game!: Game;
         public _id!: number[];
         public _position!: THREE.Vector3;
+        public _rotation!: THREE.Vector3;
         public _width!: number;
         public _height!: number;
         public _depth!: number;
@@ -56,6 +61,11 @@ export abstract class MapSite {
 
         position(position: THREE.Vector3): this {
             this._position = position;
+            return this;
+        }
+
+        rotation(rotation: THREE.Vector3): this {
+            this._rotation = rotation;
             return this;
         }
 
@@ -136,7 +146,7 @@ export abstract class MapSite {
         }
     }
 
-    Mouseover(target: THREE.Mesh) {
+    Mouseover(target: THREE.Mesh, temporary: boolean = false) {
         this.hovered = false;
         for (let child of this.scene.children) {
             if (child instanceof THREE.Box3Helper) {
@@ -146,6 +156,11 @@ export abstract class MapSite {
         if (!this.hovered) {
             this.box.setFromObject(target);
             this.game.scene.add(new THREE.Box3Helper(this.box, 'lawngreen'));
+        }
+        if (temporary) {
+            setTimeout(() => {
+                this.Mouseleave();
+            }, 5000);
         }
     }
 

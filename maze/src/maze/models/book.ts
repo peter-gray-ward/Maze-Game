@@ -27,9 +27,10 @@ export class Book extends MapSite {
 	public book: IBook;
 
 
-	constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string, book: IBook) {
-        super(game, id, position, width, height, depth, color, text);
+	constructor(game: Game, id: number[], position: THREE.Vector3, rotation: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string, book: IBook) {
+        super(game, id, position, rotation, width, height, depth, color, text);
         this.book = book;
+        this.isItem = true;
     }
 
     override GetRandomTexture(): string {
@@ -38,7 +39,7 @@ export class Book extends MapSite {
 
     override Build() {
         super.Build();
-        const bookGeometry = new THREE.BoxGeometry(this.depth, this.height, this.width);
+        const bookGeometry = new THREE.BoxGeometry(this.depth, this.height, this.width, 3, 3);
         const bookMaterial = new THREE.MeshStandardMaterial({ 
         	color: this.color,
         	side: THREE.DoubleSide 
@@ -62,7 +63,7 @@ export class Book extends MapSite {
             if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined || this._book === undefined) {
                 throw new Error("Missing required properties to create a Book.");
             }
-            return new Book(this._game, this._id, this._position, this._width, this._height, this._depth, this._color, this._text, this._book);
+            return new Book(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text, this._book);
 
         }
     }

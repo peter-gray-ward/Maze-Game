@@ -24,6 +24,12 @@
 
 #target {
     height: 10vh;
+    width: 30%;
+    font-size: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #engagement {

@@ -20,8 +20,9 @@ export class Room extends MapSite {
     items: any[] = [];
     visited: boolean = false;
 
-    constructor(game: Game, id: number[], position: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
-        super(game, id, position, width, height, depth, color, text);
+    constructor(game: Game, id: number[], position: THREE.Vector3, rotation: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string) {
+        super(game, id, position, rotation, width, height, depth, color, text);
+        this.scene.name = "room " + id.join(",");
     }
 
 
@@ -125,9 +126,11 @@ export class Room extends MapSite {
                 switch (s.direction) {
                     case Direction.East:
                         side.scene.translateZ(this.depth / 2);
+
                         break;
                     case Direction.West:
                         side.scene.translateZ(-this.depth / 2);
+                        side.scene.rotateY(Math.PI);
                         break;
                     case Direction.South:
                         side.scene.translateX(this.width / 2);
@@ -140,14 +143,18 @@ export class Room extends MapSite {
                     default:
                         break;
                 }
+
+                const NS = s.direction == Direction.North || s.direction == Direction.South ;
                 
                 this.scene.add(side.scene);
 
                 if (!setBookshelf && s instanceof Wall) {
-                    setBookshelf = true; // Prevent multiple bookshelf creation
+                    setBookshelf = true;
+                    let rotation = new THREE.Vector3(0, side.scene.rotation.y, 0);
 
                     // BookShelves (3 per wall)
                     let halfHeight = this.height / 2;
+                    let bookshelfDepth = 12;
                     for (let i = 1; i < 2; i++) {
 
                         let bookshelfBoardWidth: number = 1;
@@ -155,10 +162,32 @@ export class Room extends MapSite {
                         let bookshelfHeight: number = Math.random() * (this.height - halfHeight) + halfHeight;
 
                         // Calculate bookshelf position along the wall
-                        let bookshelfPositionX = s.position.x + (i - 1) * (this.width / 3); // Adjust for 3 bookshelves
-                        let bookshelfPositionY = bookshelfHeight / 2; // Set at a reasonable height
-                        let bookshelfPositionZ = s.position.z; // Keep the same z-depth
-                        let bookshelfDepth = 12;
+
+                        let bookshelfPositionX = NS ? side.scene.position.x : side.scene.position.x + (i - 1) * (this.width / 3);
+                        let bookshelfPositionY = bookshelfHeight / 2;
+                        let bookshelfPositionZ = NS ? side.scene.position.z + (i - 1) * (this.width / 3) : side.scene.position.z;
+
+                        switch (s.direction) {
+                            case Direction.East:
+                                bookshelfPositionZ -= bookshelfDepth
+                                rotation.y = Math.PI;
+                                break;
+                            case Direction.West:
+                                bookshelfPositionZ += bookshelfDepth
+                                break;
+                            case Direction.South:
+                                bookshelfPositionX -= bookshelfDepth
+
+                                rotation.y = Math.PI * 1.5;
+                                break;
+                            case Direction.North:
+                                bookshelfPositionX += bookshelfDepth
+                                break;
+                            default:
+                                break;
+                        }
+
+
                         let bookshelf: BookShelf = new BookShelf.BookShelfBuilder()
                             .game(this.game)
                             .id(this.id.concat([0, i]))
@@ -166,6 +195,7 @@ export class Room extends MapSite {
                             .width(bookshelfWidth)
                             .height(bookshelfHeight)
                             .depth(bookshelfDepth)
+                            .rotation(rotation)
                             .color('brown')
                             .text("I'm a bookshelf!")
                             .build();
@@ -173,30 +203,7 @@ export class Room extends MapSite {
                         bookshelf.Build();
                         this.items.push(bookshelf);
 
-                        let offset = bookshelfDepth + bookshelfBoardWidth;
-                        // Adjust bookshelf placement based on the wall's direction
-                        switch (s.direction) {
-                            case Direction.East:
-                                bookshelf.scene.translateZ(this.depth / 2);
-                                bookshelf.scene.translateX(offset);
-                                break;
-                            case Direction.West:
-                                bookshelf.scene.translateZ(-this.depth / 2);
-                                bookshelf.scene.translateX(-offset);
-                                break;
-                            case Direction.South:
-                                bookshelf.scene.translateX(this.width / 2);
-                                bookshelf.scene.rotateY(Math.PI / 2);
-                                bookshelf.scene.translateZ(-offset);
-                                break;
-                            case Direction.North:
-                                bookshelf.scene.translateX(-this.width / 2);
-                                bookshelf.scene.rotateY(Math.PI / 2);
-                                bookshelf.scene.translateZ(offset);
-                                break;
-                            default:
-                                break;
-                        }
+                        
 
                         this.scene.add(bookshelf.scene);
                     }
@@ -243,7 +250,7 @@ export class Room extends MapSite {
             if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
                 throw new Error("Missing required properties to create a Floor.");
             }
-            return new Room(this._game, this._id, this._position, this._width, this._height, this._depth, this._color, this._text);
+            return new Room(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text);
         }
     }
 
