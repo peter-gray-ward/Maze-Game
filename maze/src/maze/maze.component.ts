@@ -83,11 +83,14 @@ export class MazeComponent {
 
         this.user.target$.subscribe((target: Target | null) => this.target = target);
         this.user.engagement$.subscribe((target: Target | null) => this.engagement = target);
+
       });
       this.generateMaze();
       let mazeShell: { [key: string]: THREE.Mesh } = this.build3DMaze();
       this.maze.init(user, mazeShell);
       this.game.init(user, this.maze);
+
+      this.toggleFirstPerson();
     });
   }
 
@@ -258,7 +261,7 @@ export class MazeComponent {
               .depth(roomDepth)
               .direction(direction as DirectionType)
               .rooms(roomA, roomB) 
-              .color('red')
+              .color('transparent')
               .text("I'm a door!")
               .build()
           );
@@ -293,7 +296,7 @@ export class MazeComponent {
               .depth(roomDepth)
               .direction(OppositeDirection(direction) as DirectionType)
               .rooms(roomB, roomA) 
-              .color('purple')
+              .color('transparent')
               .text("I'm a door!")
               .build()
           );

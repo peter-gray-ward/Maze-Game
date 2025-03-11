@@ -76,69 +76,39 @@ export class Room extends MapSite {
         this.ceiling.Build();
         this.scene.add(this.ceiling.scene);
 
-        // Ceiling Light
-        this.lights.push(
-            new CeilingLight.LightBuilder()
-            .game(this.game)
-            .id(this.id.concat([5]))
-            .position(this.ceiling.position.clone().add(new THREE.Vector3(0, -20, 0)))
-            .width(this.width)
-            .height(12)
-            .depth(this.depth)
-            .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
-            .text("I'm a light!")
-            .build()
-        );
-
-        for (let light of this.lights) {
-            light.Build();
-            this.scene.add(light.scene);
-        }
         
         // Walls
         let setBookshelf = false;
         for (let s of this.children) {
-            if (s instanceof Side) {
-                let side: Side = s instanceof Wall ? 
-                    new Wall.WallBuilder()
-                        .game(this.game)
-                        .id(this.id.concat([s.direction]))
-                        .position(this.position.clone().add(new THREE.Vector3(0, this.height / 2, 0)))
-                        .width(this.width)
-                        .height(this.height)
-                        .depth(12)
-                        .color('blue')
-                        .text("I'm a wall!")
-                        .build()
-                    : new Door.DoorBuilder()
-                        .game(this.game)
-                        .id(this.id.concat([s.direction]))
-                        .position(this.position.clone().add(new THREE.Vector3(0, this.height / 2, 0)))
-                        .width(this.width)
-                        .height(this.height)
-                        .depth(12)
-                        .color(s.color)
-                        .text("I'm a door!")
-                        .build()
+            if (s instanceof Wall) {
+                let wall: Wall = new Wall.WallBuilder()
+                    .game(this.game)
+                    .id(this.id.concat([s.direction]))
+                    .position(this.position.clone().add(new THREE.Vector3(0, this.height / 2, 0)))
+                    .width(this.width)
+                    .height(this.height)
+                    .depth(12)
+                    .color('blue')
+                    .text("I'm a wall!")
+                    .build();
 
-
-                side.Build();
+                wall.Build();
                 switch (s.direction) {
                     case Direction.East:
-                        side.scene.translateZ(this.depth / 2);
+                        wall.scene.translateZ(this.depth / 2);
 
                         break;
                     case Direction.West:
-                        side.scene.translateZ(-this.depth / 2);
-                        side.scene.rotateY(Math.PI);
+                        wall.scene.translateZ(-this.depth / 2);
+                        wall.scene.rotateY(Math.PI);
                         break;
                     case Direction.South:
-                        side.scene.translateX(this.width / 2);
-                        side.scene.rotateY(Math.PI / 2);
+                        wall.scene.translateX(this.width / 2);
+                        wall.scene.rotateY(Math.PI / 2);
                         break;
                     case Direction.North:
-                        side.scene.translateX(-this.width / 2);
-                        side.scene.rotateY(Math.PI / 2);
+                        wall.scene.translateX(-this.width / 2);
+                        wall.scene.rotateY(Math.PI / 2);
                         break;
                     default:
                         break;
@@ -146,11 +116,11 @@ export class Room extends MapSite {
 
                 const NS = s.direction == Direction.North || s.direction == Direction.South ;
                 
-                this.scene.add(side.scene);
+                this.scene.add(wall.scene);
 
-                if (!setBookshelf && s instanceof Wall) {
+                if (Math.random() < 0.1) {
                     setBookshelf = true;
-                    let rotation = new THREE.Vector3(0, side.scene.rotation.y, 0);
+                    let rotation = new THREE.Vector3(0, wall.scene.rotation.y, 0);
 
                     // BookShelves (3 per wall)
                     let halfHeight = this.height / 2;
@@ -163,9 +133,9 @@ export class Room extends MapSite {
 
                         // Calculate bookshelf position along the wall
 
-                        let bookshelfPositionX = NS ? side.scene.position.x : side.scene.position.x + (i - 1) * (this.width / 3);
+                        let bookshelfPositionX = NS ? wall.scene.position.x : wall.scene.position.x + (i - 1) * (this.width / 3);
                         let bookshelfPositionY = bookshelfHeight / 2;
-                        let bookshelfPositionZ = NS ? side.scene.position.z + (i - 1) * (this.width / 3) : side.scene.position.z;
+                        let bookshelfPositionZ = NS ? wall.scene.position.z + (i - 1) * (this.width / 3) : wall.scene.position.z;
 
                         switch (s.direction) {
                             case Direction.East:
@@ -206,6 +176,26 @@ export class Room extends MapSite {
                         
 
                         this.scene.add(bookshelf.scene);
+
+
+                        // if bookshelf, add a light
+                        this.lights.push(
+                            new CeilingLight.LightBuilder()
+                            .game(this.game)
+                            .id(this.id.concat([5]))
+                            .position(this.ceiling.position.clone().add(new THREE.Vector3(0, -20, 0)))
+                            .width(this.width)
+                            .height(12)
+                            .depth(this.depth)
+                            .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
+                            .text("I'm a light!")
+                            .build()
+                        );
+
+                        for (let light of this.lights) {
+                            light.Build();
+                            this.scene.add(light.scene);
+                        }
                     }
                 }
 

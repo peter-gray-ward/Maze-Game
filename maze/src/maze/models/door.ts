@@ -4,6 +4,8 @@ import { Room } from './room';
 import { MapSite } from './map-site';
 import { DirectionType } from '../constants/direction';
 import * as THREE from 'three';
+import { CSG } from 'three-csg-ts';
+import * as style from '../utils/style';
 
 export class Door extends Side {
     open: boolean = false;
@@ -16,17 +18,33 @@ export class Door extends Side {
 
     override Build(): void {
         super.Build();
-        // const door = new THREE.Mesh(
-        //     new THREE.BoxGeometry(this.width, this.height, this.depth),
-        //     new THREE.MeshStandardMaterial({
-        //         color: new THREE.Color(this.color),
-        //         transparent: true,
-        //         opacity: 0.5,
-        //         side: THREE.DoubleSide
-        //     })
-        // );
-        // door.position.copy(this.position);
-        // this.scene = door;
+        
+        const wall = new THREE.Mesh(
+            new THREE.BoxGeometry(this.width, this.height, this.depth),
+            new THREE.MeshStandardMaterial({
+                color: 'white',
+                map: style.wallpaperTexture,
+                side: THREE.DoubleSide
+            })
+        );
+        let doorHeight = this.height / 1.5;
+        const door = new THREE.Mesh(
+            new THREE.BoxGeometry(this.width / 4, doorHeight, this.depth),
+            new THREE.MeshStandardMaterial({
+                color: 'white',
+                map: style.wallpaperTexture,
+                side: THREE.DoubleSide
+            })
+        );
+        door.position.y -= doorHeight / 2;
+        wall.updateMatrix();
+        door.updateMatrix();
+
+        let wallWithDoor = CSG.subtract(wall, door);
+        wallWithDoor.name = "wall|" + this.id.join(',');
+        wallWithDoor.position.copy(this.position);
+        this.scene = wallWithDoor;
+
     }
 
     static DoorBuilder = class extends MapSite.MapSiteBuilder {
