@@ -20,9 +20,9 @@ export class Maze {
     dimensions!: number;
     game!: Game;
     text: string = "The Maze";
-    roomWidth: number = 300;
+    roomWidth: number = 200;
     roomHeight: number = 200;
-    roomDepth: number = 300;
+    roomDepth: number = 200;
     userPosition: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
 
     constructor(game: Game, dimensions: number) {
@@ -142,7 +142,7 @@ export class Maze {
     }
 
     Activate(): Room[] {
-        const threshold = this.roomWidth * 1.75;
+        const threshold = this.roomWidth * 2.5
         const activeRooms: Room[] = [];
         for (let room of this.rooms) {
             const roomNear = room.position.distanceTo(this.userPosition) < threshold;

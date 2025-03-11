@@ -39,7 +39,7 @@ export class User extends MapSite {
     model!: GLTFModel;
     firstPerson: boolean = false;
     camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-    speed: number = 3;
+    speed: number = 10;
     rotationSpeed: number = Math.PI / 11;
     animationMixer!: THREE.AnimationMixer;
     animations: any = {
