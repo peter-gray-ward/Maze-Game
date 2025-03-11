@@ -84,9 +84,10 @@ export class MazeComponent {
         this.user.engagement$.subscribe((target: Target | null) => this.engagement = target);
       });
       this.generateMaze();
-      this.build3DMaze();
+      let wallShell: THREE.Mesh = this.build3DMaze();
       this.maze.init(user);
       this.game.init(user, this.maze);
+      this.game.scene.add(wallShell);
     });
   }
 
@@ -316,12 +317,62 @@ export class MazeComponent {
     console.log("Finished creating the maze path", this.maze);
   }
 
-  build3DMaze(): void {
+  build3DMaze(): THREE.Mesh {
+    let mazeShellVertices: number[] = [];
+    let mazeShellIndices: number[] = [];
+    let vertexOffset = 0; // Keep track of the vertex offset across different meshes
+    let mazeShellBufferGeometry = new THREE.BufferGeometry();
+
     for (let room of this.maze.rooms) {
       room.Build();
+      room.scene.children.filter(c => /wall/.test(c.name)).forEach(mesh => {
+        const wallMesh = mesh as THREE.Mesh;
+        const geometry = wallMesh.geometry;
+        const positions = Array.from(geometry.attributes['position'].array);
+        const indices = geometry.index ? Array.from(geometry.index.array) : [];
+
+        // Transform matrix: Applies mesh position & rotation
+        wallMesh.updateMatrixWorld(true); // Ensure world matrix is up-to-date
+        const matrix = wallMesh.matrixWorld;
+
+        // Apply transformation to each vertex
+        for (let i = 0; i < positions.length; i += 3) {
+          const vertex = new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]);
+          vertex.applyMatrix4(matrix); // Transform to world space
+          mazeShellVertices.push(vertex.x, vertex.y, vertex.z);
+        }
+
+        // Adjust indices and append
+        indices.forEach(index => {
+            mazeShellIndices.push(index + vertexOffset);
+        });
+
+        // Update vertex offset
+        vertexOffset += positions.length / 3; // Since each vertex has 3 components (x, y, z)
+      });
     }
+
+    // Set attributes correctly
+    mazeShellBufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute(mazeShellVertices, 3));
+    mazeShellBufferGeometry.setIndex(mazeShellIndices);
+    mazeShellBufferGeometry.computeVertexNormals();
+
+    // Create the shell mesh
+    var wallShell = new THREE.Mesh(
+        mazeShellBufferGeometry,
+        new THREE.MeshBasicMaterial({
+            color: 'red',
+            transparent: true,
+            opacity: 0.8,
+            side: THREE.DoubleSide // Ensure visibility from all angles
+        })
+    );
+
     this.game.levels.push(this.maze);
+    return wallShell;
   }
+
+
 
   exitEngagement() {
     this.game.user.engagementSubject.next(null);

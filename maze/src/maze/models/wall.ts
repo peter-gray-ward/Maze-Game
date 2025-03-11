@@ -17,7 +17,6 @@ export class Wall extends Side {
     constructor(game: Game, id: number[], position: THREE.Vector3, rotation: THREE.Vector3, width: number, height: number, depth: number, color: string, text: string, rooms: Room[], direction: DirectionType) {
         super(game, id, position, rotation, width, height, depth, color, text, rooms, direction);
         this.direction = direction;
-        this.scene.name = "wall " + id.join(",");
     }
 
     override Build(): void {
@@ -32,6 +31,7 @@ export class Wall extends Side {
             })
         );
         wall.position.copy(this.position);
+        wall.name = "wall-" + this.id.join(",");
         this.scene = wall;
     }
 

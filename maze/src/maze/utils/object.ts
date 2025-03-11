@@ -9,10 +9,16 @@ export function KeyOf<T>(obj: T, value: any): keyof T | string {
     return '';
 }
 
-export function getAllDescendants(obj: THREE.Object3D, descendants: THREE.Object3D[] = []) {
+export function getAllDescendants(obj: THREE.Object3D, descendants: THREE.Mesh[] = [], name?: RegExp): THREE.Mesh[] {
     obj.children.forEach((child) => {
-        descendants.push(child);
-        getAllDescendants(child, descendants);
+        if (child instanceof THREE.Mesh) {
+            if (name && name.test(child.name)) {
+                descendants.push(child);
+            } else if (!name) {
+                descendants.push(child);
+            }
+        }
+        getAllDescendants(child, descendants, name);
     });
     return descendants;
 }
