@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import { User, UserPosition, Target } from './models/user';
 import { Game } from './singletons/game';
 import { KeyOf, getAllDescendants } from './utils/object';
+import * as style from './utils/style';
 
 @Component({
   selector: 'maze-root',
@@ -84,10 +85,9 @@ export class MazeComponent {
         this.user.engagement$.subscribe((target: Target | null) => this.engagement = target);
       });
       this.generateMaze();
-      let wallShell: THREE.Mesh = this.build3DMaze();
-      this.maze.init(user);
+      let mazeShell: { [key: string]: THREE.Mesh } = this.build3DMaze();
+      this.maze.init(user, mazeShell);
       this.game.init(user, this.maze);
-      this.game.scene.add(wallShell);
     });
   }
 
@@ -317,59 +317,33 @@ export class MazeComponent {
     console.log("Finished creating the maze path", this.maze);
   }
 
-  build3DMaze(): THREE.Mesh {
+  build3DMaze(): { [key: string]: THREE.Mesh } {
+    let shell: { [key: string]: THREE.Mesh } = {}
+
     let mazeShellVertices: number[] = [];
     let mazeShellIndices: number[] = [];
     let vertexOffset = 0; // Keep track of the vertex offset across different meshes
     let mazeShellBufferGeometry = new THREE.BufferGeometry();
 
+    let roomWalls: any[] = [];
+    let roomFloors: any[] = [];
+    let roomCeilings: any[] = [];
+
     for (let room of this.maze.rooms) {
       room.Build();
-      room.scene.children.filter(c => /wall/.test(c.name)).forEach(mesh => {
-        const wallMesh = mesh as THREE.Mesh;
-        const geometry = wallMesh.geometry;
-        const positions = Array.from(geometry.attributes['position'].array);
-        const indices = geometry.index ? Array.from(geometry.index.array) : [];
-
-        // Transform matrix: Applies mesh position & rotation
-        wallMesh.updateMatrixWorld(true); // Ensure world matrix is up-to-date
-        const matrix = wallMesh.matrixWorld;
-
-        // Apply transformation to each vertex
-        for (let i = 0; i < positions.length; i += 3) {
-          const vertex = new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]);
-          vertex.applyMatrix4(matrix); // Transform to world space
-          mazeShellVertices.push(vertex.x, vertex.y, vertex.z);
-        }
-
-        // Adjust indices and append
-        indices.forEach(index => {
-            mazeShellIndices.push(index + vertexOffset);
-        });
-
-        // Update vertex offset
-        vertexOffset += positions.length / 3; // Since each vertex has 3 components (x, y, z)
-      });
+      
+      roomWalls = roomWalls.concat(room.scene.children.filter(c => /wall/.test(c.name)));
+      roomFloors = roomFloors.concat(room.scene.children.filter(c => /floor/.test(c.name)));
+      roomCeilings = roomCeilings.concat(room.scene.children.filter(c => /ceiling/.test(c.name)));
     }
 
-    // Set attributes correctly
-    mazeShellBufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute(mazeShellVertices, 3));
-    mazeShellBufferGeometry.setIndex(mazeShellIndices);
-    mazeShellBufferGeometry.computeVertexNormals();
 
-    // Create the shell mesh
-    var wallShell = new THREE.Mesh(
-        mazeShellBufferGeometry,
-        new THREE.MeshBasicMaterial({
-            color: 'red',
-            transparent: true,
-            opacity: 0.8,
-            side: THREE.DoubleSide // Ensure visibility from all angles
-        })
-    );
+    shell['wall'] = style.buildShell(roomWalls, style.wallpaperTexture);
+    shell['floor'] = style.buildShell(roomFloors, style.floorTexture);
+    shell['ceiling'] = style.buildShell(roomCeilings, style.ceilingTexture);
 
     this.game.levels.push(this.maze);
-    return wallShell;
+    return shell;
   }
 
 

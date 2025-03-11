@@ -36,16 +36,24 @@ export class Game {
         document.body.appendChild(this.renderer.domElement);
 
         this.scene.add(this.user.model.scene);
-          console.log("🧍 User model loaded", this.user);
+        console.log("🧍 User model loaded", this.user);
 
-          fromEvent(window, 'resize').subscribe(() => {
-              const w = window.innerWidth;
-              const h = window.innerHeight;
-              this.user.camera.aspect = w / h;
-              this.user.camera.updateProjectionMatrix();
-              this.renderer.setSize(w, h);
-          });
-          
+        fromEvent(window, 'resize').subscribe(() => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            this.user.camera.aspect = w / h;
+            this.user.camera.updateProjectionMatrix();
+            this.renderer.setSize(w, h);
+        });
+
+        for (let key in this.maze.shell) {
+            this.scene.add(this.maze.shell[key]);
+        }
+
+        let ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        ambientLight.position.set(this.maze.roomWidth * this.maze.dimensions * 2, 100, this.maze.roomWidth * this.maze.dimensions * 2);
+        this.scene.add(ambientLight);
+
         this.animate();
     }
 

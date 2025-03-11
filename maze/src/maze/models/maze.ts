@@ -14,6 +14,7 @@ export interface IMaze {
 }
 
 export class Maze {
+    shell!: { [key: string]: THREE.Mesh };
     rooms: Room[] = [];
     outside!: Room;
     dimensions!: number;
@@ -38,8 +39,6 @@ export class Maze {
             .color("black")
             .text(`Outside`)
             .build()
-
-        
 
 
         for (var x = 0; x < dimensions; x++) {
@@ -122,8 +121,9 @@ export class Maze {
         }
     }
 
-    init(user: User) {
+    init(user: User, shell: { [key: string]: THREE.Mesh }) {
         user.activity.subscribe(user => this.userPosition.copy(user.model.scene.position));
+        this.shell = shell;
     }
 
     private getAdjacentRoom(x: number, y: number): Room {
@@ -142,16 +142,33 @@ export class Maze {
     }
 
     Activate(): Room[] {
-        const threshold = this.roomWidth
+        const threshold = this.roomWidth * 1.75;
         const activeRooms: Room[] = [];
         for (let room of this.rooms) {
             const roomNear = room.position.distanceTo(this.userPosition) < threshold;
+
             if (roomNear) {
                 room.Act();
                 activeRooms.push(room);
             } else {
                 room.Remove();
             }
+        }
+        for (let shellType in this.shell) {
+            // @ts-ignore
+            const shellPositions = this.shell[shellType].geometry.attributes.position.array;
+            for (let i = 0; i < shellPositions.length; i += 3) {
+                const vertex = new THREE.Vector3(shellPositions[i], shellPositions[i + 1], shellPositions[i + 2]);
+
+                if (vertex.distanceTo(this.userPosition) < threshold) {
+                    // @ts-ignore
+                    this.shell[shellType].geometry.attributes.color.array[i / 3 * 4 + 3] = 0;
+                } else {
+                    // @ts-ignore
+                    this.shell[shellType].geometry.attributes.color.array[i / 3 * 4 + 3] = 1;
+                }
+            }
+            this.shell[shellType].geometry.attributes['color'].needsUpdate = true;
         }
         return activeRooms;
     }

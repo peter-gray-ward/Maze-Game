@@ -5,12 +5,8 @@ import { Room } from './room';
 import { Game } from '../singletons/game';
 import { Side } from './side';
 import { DirectionType } from '../constants/direction';
+import * as style from '../utils/style';
 
-const wallpaper = new THREE.TextureLoader().load("/floor.jpg", texture => {
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(5, 5);
-});
 
 export class Wall extends Side {
 
@@ -24,9 +20,8 @@ export class Wall extends Side {
         const wall = new THREE.Mesh(
             new THREE.BoxGeometry(this.width, this.height, this.depth, 5, 5),
             new THREE.MeshStandardMaterial({
-                map: wallpaper,
+                map: style.wallpaperTexture,
                 color: 'white',
-                wireframe: true,
                 side: THREE.DoubleSide
             })
         );
