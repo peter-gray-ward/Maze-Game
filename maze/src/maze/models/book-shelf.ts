@@ -56,8 +56,8 @@ export class BookShelf extends MapSite {
             bookshelf.add(shelf);
 
             // **Add Books on this shelf**
-            let remainingWidth = this.width;
-            let shelfStart = shelf.position.x - halfWidth;
+            let remainingWidth = this.width - 0.5;
+            let shelfStart = shelf.position.x - halfWidth + 0.5;
             let bookX = shelfStart;
             let bookCount = 0;
             
@@ -112,9 +112,6 @@ export class BookShelf extends MapSite {
 
     static BookShelfBuilder = class extends MapSite.MapSiteBuilder {
         build(): BookShelf {
-            if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
-                throw new Error("Missing required properties to create a BookShelf.");
-            }
             return new BookShelf(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text);
         }
     }

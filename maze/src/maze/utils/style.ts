@@ -11,7 +11,7 @@ export const ceilingTexture = new THREE.TextureLoader().load("/floor.jpg", textu
 export const floorTexture = new THREE.TextureLoader().load("/floor.jpg", texture => {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(8, 8);
+    texture.repeat.set(1, 1);
 });
 
 export const wallpaperTexture = new THREE.TextureLoader().load("/wallpaper.webp", texture => {

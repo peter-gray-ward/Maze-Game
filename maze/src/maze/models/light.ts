@@ -21,9 +21,12 @@ export class CeilingLight extends Light {
         this.light = new THREE.PointLight(0xffffff, 10000, 1000);
         this.light.position.copy(this.position)
         this.light.castShadow = true;
-        (this.light.shadow as THREE.PointLightShadow).mapSize.width = 1024;  // Default: 512 (too low for PointLights)
-        (this.light.shadow as THREE.PointLightShadow).mapSize.height = 1024;
+        (this.light.shadow as THREE.PointLightShadow).mapSize.width = 512; 
+        (this.light.shadow as THREE.PointLightShadow).mapSize.height = 512;
         (this.light.shadow as THREE.PointLightShadow).bias = -0.0005;
+        (this.light.shadow as THREE.PointLightShadow).camera.near = 1;   // Don't start shadows too close
+        (this.light.shadow as THREE.PointLightShadow).camera.far = 400;  // Adjust based on scene size
+
 
         this.light.position.copy(this.position.clone().add(new THREE.Vector3(0, -20, 0)));
         this.scene.name = 'light - ' + this.id.join(',');
@@ -89,9 +92,6 @@ export class CeilingLight extends Light {
         }
 
         build(): CeilingLight {
-            if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
-                throw new Error("Missing required properties to create a Floor.");
-            }
             return new CeilingLight(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text, this._light);
         }
     }

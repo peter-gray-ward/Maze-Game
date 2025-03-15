@@ -21,7 +21,7 @@ export class Ceiling extends MapSite {
         const ceilingMesh = new THREE.Mesh(
             new THREE.BoxGeometry(this.width, this.floorDepth, this.depth),
             new THREE.MeshStandardMaterial({
-                map: style.ceilingTexture,
+                map: style.wallpaperTexture,
                 side: THREE.DoubleSide,
                 wireframe: false
             })
@@ -34,9 +34,6 @@ export class Ceiling extends MapSite {
 
     static CeilingBuilder = class extends MapSite.MapSiteBuilder {
         build(): Ceiling {
-            if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
-                throw new Error("Missing required properties to create a Ceiling.");
-            }
             return new Ceiling(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text);
         }
     }

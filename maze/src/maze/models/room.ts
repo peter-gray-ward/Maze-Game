@@ -76,11 +76,14 @@ export class Room extends MapSite {
         this.ceiling.Build();
         this.scene.add(this.ceiling.scene);
 
+        let setLight = false;
         
         // Walls
         let setBookshelf = false;
         for (let s of this.children) {
             if (s instanceof Wall) {
+
+
                 let wall: Wall = new Wall.WallBuilder()
                     .game(this.game)
                     .id(this.id.concat([s.direction]))
@@ -125,6 +128,7 @@ export class Room extends MapSite {
                     // BookShelves (3 per wall)
                     let halfHeight = this.height / 2;
                     let bookshelfDepth = 12;
+                    let bookShelfOffset = 13;
                     for (let i = 1; i < 2; i++) {
 
                         let bookshelfBoardWidth: number = 1;
@@ -139,19 +143,19 @@ export class Room extends MapSite {
 
                         switch (s.direction) {
                             case Direction.East:
-                                bookshelfPositionZ -= bookshelfDepth
+                                bookshelfPositionZ -= bookShelfOffset
                                 rotation.y = Math.PI;
                                 break;
                             case Direction.West:
-                                bookshelfPositionZ += bookshelfDepth
+                                bookshelfPositionZ += bookShelfOffset
                                 break;
                             case Direction.South:
-                                bookshelfPositionX -= bookshelfDepth
+                                bookshelfPositionX -= bookShelfOffset
 
                                 rotation.y = Math.PI * 1.5;
                                 break;
                             case Direction.North:
-                                bookshelfPositionX += bookshelfDepth
+                                bookshelfPositionX += bookShelfOffset
                                 break;
                             default:
                                 break;
@@ -179,24 +183,28 @@ export class Room extends MapSite {
 
 
                         // if bookshelf, add a light
-                        this.lights.push(
-                            new CeilingLight.LightBuilder()
-                            .game(this.game)
-                            .id(this.id.concat([5]))
-                            .position(this.ceiling.position.clone().add(new THREE.Vector3(0, -20, 0)))
-                            .width(this.width)
-                            .height(12)
-                            .depth(this.depth)
-                            .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
-                            .text("I'm a light!")
-                            .build()
-                        );
-
-                        for (let light of this.lights) {
-                            light.Build();
-                            this.scene.add(light.scene);
+                        if (!setLight) {
+                            this.lights.push(
+                                new CeilingLight.LightBuilder()
+                                .game(this.game)
+                                .id(this.id.concat([5]))
+                                .position(this.ceiling.position.clone().add(new THREE.Vector3(0, -20, 0)))
+                                .width(this.width)
+                                .height(12)
+                                .depth(this.depth)
+                                .color(`rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`)
+                                .text("I'm a light!")
+                                .build()
+                            );
+                            setLight = true;
                         }
+                        
                     }
+                }
+
+                for (let light of this.lights) {
+                    light.Build();
+                    this.scene.add(light.scene);
                 }
 
             }
@@ -237,9 +245,6 @@ export class Room extends MapSite {
         }
 
         build(): Room {
-            if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
-                throw new Error("Missing required properties to create a Floor.");
-            }
             return new Room(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text);
         }
     }

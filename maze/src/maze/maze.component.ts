@@ -3,7 +3,7 @@ import { Component, inject, signal, ViewChild, ElementRef,
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MapSite } from './models/map-site';
-import { Maze, IMaze } from './models/maze';
+import { Maze, IMaze } from './singletons/levels/maze';
 import { Room } from './models/room';
 import { Door } from './models/door';
 import { Wall } from './models/wall';
@@ -24,7 +24,7 @@ import * as style from './utils/style';
 })
 export class MazeComponent {
   title: string = "maze";
-  dimensions: number = 12;
+  dimensions: number = 20;
   wallWidth: string = "0.15rem";
   maze: Maze;
   toggle: any = {
@@ -335,15 +335,15 @@ export class MazeComponent {
     for (let room of this.maze.rooms) {
       room.Build();
       
-      roomWalls = roomWalls.concat(room.scene.children.filter(c => /wall/.test(c.name)));
-      roomFloors = roomFloors.concat(room.scene.children.filter(c => /floor/.test(c.name)));
-      roomCeilings = roomCeilings.concat(room.scene.children.filter(c => /ceiling/.test(c.name)));
+      roomWalls = roomWalls.concat(room.scene.children.filter((c: THREE.Object3D) => /wall/.test(c.name)));
+      roomFloors = roomFloors.concat(room.scene.children.filter((c: THREE.Object3D) => /floor/.test(c.name)));
+      roomCeilings = roomCeilings.concat(room.scene.children.filter((c: THREE.Object3D) => /ceiling/.test(c.name)));
     }
 
 
     shell['wall'] = style.buildShell(roomWalls, style.wallpaperTexture);
     shell['floor'] = style.buildShell(roomFloors, style.floorTexture);
-    shell['ceiling'] = style.buildShell(roomCeilings, style.ceilingTexture);
+    shell['ceiling'] = style.buildShell(roomCeilings, style.wallpaperTexture);
 
     this.game.levels.push(this.maze);
     return shell;

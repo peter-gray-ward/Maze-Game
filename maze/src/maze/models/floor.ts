@@ -35,9 +35,6 @@ export class Floor extends MapSite {
 
     static FloorBuilder = class extends MapSite.MapSiteBuilder {
         build(): Floor {
-            if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
-                throw new Error("Missing required properties to create a Floor.");
-            }
             return new Floor(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text);
         }
     }

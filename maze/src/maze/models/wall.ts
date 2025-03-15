@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { MapSite } from './map-site';
-import { Maze, IMaze } from './maze';
+import { Maze, IMaze } from '../singletons/levels/maze';
 import { Room } from './room';
 import { Game } from '../singletons/game';
 import { Side } from './side';
@@ -45,9 +45,6 @@ export class Wall extends Side {
         }
 
         build(): Wall {
-            if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined) {
-                throw new Error("Missing required properties to create a Floor.");
-            }
             return new Wall(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text, this._rooms, this._direction as DirectionType);
         }
     }

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Game } from '../singletons/game';
+import { Room } from './room';
 import { MapSite } from './map-site';
 import { fromEvent, Subject, BehaviorSubject } from 'rxjs';
 import { inject, Injectable, Sanitizer, SecurityContext } from '@angular/core';
@@ -236,7 +237,7 @@ export class User extends MapSite {
 
             raycaster.setFromCamera(mouse, this.camera);
 
-            const currentRoom = this.game.maze.rooms.find(room => room.id.join(',') == this.currentRoomId.join(','));
+            const currentRoom = this.game.maze.rooms.find((room: Room) => room.id.join(',') == this.currentRoomId.join(','));
 
             if (currentRoom) {
                 currentRoom.scene.updateWorldMatrix(true, true);

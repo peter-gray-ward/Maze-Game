@@ -1,10 +1,10 @@
-import { Room } from './room';
-import { Wall } from './wall';
-import { MapSite } from './map-site';
-import { Side } from './side';
-import { Direction } from '../constants/direction';
-import { Game } from '../singletons/game';
-import { User } from './user';
+import { Room } from '../../models/room';
+import { Wall } from '../../models/wall';
+import { MapSite } from '../../models/map-site';
+import { Side } from '../../models/side';
+import { Direction } from '../../constants/direction';
+import { Game } from '../game';
+import { User } from '../../models/user';
 import * as THREE from 'three';
 
 export interface IMaze {
@@ -142,7 +142,7 @@ export class Maze {
     }
 
     Activate(): Room[] {
-        const threshold = this.roomWidth * 2.5
+        const threshold = this.roomWidth * 5
         const activeRooms: Room[] = [];
         for (let room of this.rooms) {
             const roomNear = room.position.distanceTo(this.userPosition) < threshold;

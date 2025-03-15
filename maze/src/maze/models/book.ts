@@ -60,9 +60,6 @@ export class Book extends MapSite {
     		return this;
     	}
         build(): Book {
-            if (!this._game || !this._id || !this._position || this._width === undefined || this._depth === undefined || this._book === undefined) {
-                throw new Error("Missing required properties to create a Book.");
-            }
             return new Book(this._game, this._id, this._position, this._rotation, this._width, this._height, this._depth, this._color, this._text, this._book);
 
         }

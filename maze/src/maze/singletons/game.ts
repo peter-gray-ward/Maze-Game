@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Injectable, inject, Inject } from '@angular/core';
 import { User } from '../models/user';
-import { Maze } from '../models/maze';
+import { Maze } from './levels/maze';
 import { MapSite } from '../models/map-site';
 import { fromEvent } from 'rxjs';
 import { LibraryService, Library } from './services/library';
@@ -33,6 +33,7 @@ export class Game {
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.domElement.id = "view";
 
+
         document.body.appendChild(this.renderer.domElement);
 
         this.scene.add(this.user.model.scene);
@@ -51,6 +52,7 @@ export class Game {
         }
 
         let ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+        ambientLight.castShadow = true;
         ambientLight.position.set(this.maze.roomWidth * this.maze.dimensions * 2, 100, this.maze.roomWidth * this.maze.dimensions * 2);
         this.scene.add(ambientLight);
 
