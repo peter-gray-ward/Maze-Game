@@ -142,7 +142,7 @@ export class Maze {
     }
 
     Activate(): Room[] {
-        const threshold = this.roomWidth * 2.5
+        const threshold = this.roomWidth * 6
         const activeRooms: Room[] = [];
         for (let room of this.rooms) {
             const roomNear = room.position.distanceTo(this.userPosition) < threshold;

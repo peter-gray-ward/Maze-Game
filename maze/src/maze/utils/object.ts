@@ -22,3 +22,12 @@ export function getAllDescendants(obj: THREE.Object3D, descendants: THREE.Mesh[]
     });
     return descendants;
 }
+
+export const includes = (array: any[], predicate: any) => {
+    for (let i = 0; i < array.length; i++) {
+        if (predicate(array[i])) {
+            return true;
+        }
+    }
+    return false;
+}

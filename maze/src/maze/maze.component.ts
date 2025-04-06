@@ -33,6 +33,7 @@ export class MazeComponent {
   user!: User;
   @ViewChild("userMarker") userMarker!: ElementRef;
   userPosition = signal({ x: 0, y: 0, z: 0, left: 0, top: 0 });
+  userVelocity = signal({ x: 0, y: 0, z: 0 });
   userAnimations: any = [];
   game: Game = inject(Game);
   loaded: boolean = false;
@@ -78,6 +79,8 @@ export class MazeComponent {
                   / mazeHeight
                ) + halfRoomWidthPx - halfUserMarkerPx
         }));
+        console.log(this.userVelocity(), user.velocity);
+        this.userVelocity.update(pos => user.velocity);
         this.userAnimations = Object.keys(user.animations)
           .filter(animation => user.animations[animation] && user.animations[animation].speedFactor);
 

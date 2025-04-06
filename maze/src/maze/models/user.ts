@@ -6,9 +6,10 @@ import { fromEvent, Subject, BehaviorSubject } from 'rxjs';
 import { inject, Injectable, Sanitizer, SecurityContext } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { getAllDescendants } from '../utils/object';
+import { getAllDescendants, includes} from '../utils/object';
 import { BookShelf } from './book-shelf';
 import { Book, IBook } from './book';
+import { IAction, Actions, Action, Touches, Touch } from '../constants/user';
 
 export interface GLTFModel {
 	animations: any[];
@@ -40,7 +41,8 @@ export class User extends MapSite {
     model!: GLTFModel;
     firstPerson: boolean = false;
     camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-    speed: number = 10;
+    speed: number = 3;
+    JUMP_SPIRIT: number = 1
     rotationSpeed: number = Math.PI / 11;
     animationMixer!: THREE.AnimationMixer;
     animations: any = {
@@ -50,10 +52,17 @@ export class User extends MapSite {
         strafe: null,
         run: null
     };
-    actions: any = {
+    keys: any = {
         w: false, a: false, s: false, d: false,
-        arrowleft: false, arrowup: false, arrowdown: false, arrowright: false
+        arrowleft: false, arrowup: false, arrowdown: false, arrowright: false,
+        space: false
     };
+    actions: any = {
+        [Actions.Jump]: new Action()
+    };
+    states: any = {
+        [Actions.Jump]: false
+    }
     localYAxis = new THREE.Vector3(0, 1, 0);
     cameraRadius: number = 144;
     cameraTheta: number = 1;
@@ -108,6 +117,9 @@ export class User extends MapSite {
 
 
     private move(): void {
+        // Jump
+
+
         this.previousPosition.copy(this.model.scene.position.clone());
         this.camera.position.add(this.velocity);
         this.model.scene.position.add(this.velocity);
@@ -149,6 +161,14 @@ export class User extends MapSite {
         this.model.scene.rotateY(dir * 0.3);
     }
 
+    private startJumpInit(start: Date) {
+        this.actions[Actions.Jump].start = true;
+    }
+
+    private endJumpInit() {
+        this.actions[Actions.Jump].start = false;
+    }
+
 
     private addEvents(): void {
         fromEvent(window, 'keydown').subscribe((event: any) => {
@@ -169,22 +189,22 @@ export class User extends MapSite {
                 case 'w':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
-                    if (!this.actions[key]) velocityAddition.add(forwardVector.clone().multiplyScalar(this.speed));
+                    if (!this.keys[key]) velocityAddition.add(forwardVector.clone().multiplyScalar(this.speed));
                     break;
                 case 's':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
-                    if (!this.actions[key]) velocityAddition.add(forwardVector.clone().multiplyScalar(-this.speed));
+                    if (!this.keys[key]) velocityAddition.add(forwardVector.clone().multiplyScalar(-this.speed));
                     break;
                 case 'a':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
-                    if (!this.actions[key]) velocityAddition.add(strafeDirection.clone().multiplyScalar(this.speed));
+                    if (!this.keys[key]) velocityAddition.add(strafeDirection.clone().multiplyScalar(this.speed));
                     break;
                 case 'd':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
-                    if (!this.actions[key]) velocityAddition.add(strafeDirection.clone().multiplyScalar(-this.speed));
+                    if (!this.keys[key]) velocityAddition.add(strafeDirection.clone().multiplyScalar(-this.speed));
                     break;
                 case 'arrowleft':
                     this.rotate(1);
@@ -192,16 +212,21 @@ export class User extends MapSite {
                 case 'arrowright':
                     this.rotate(-1);
                     break;
+                case '':
+                case 'space':
+                case ' ':
+                    key = 'space';
+                    if (!this.keys[key]) this.startJumpInit(new Date());
             }
 
-            this.actions[key] = true;
+            this.keys[key] = true;
 
             this.velocity.add(velocityAddition);
         });
 
         fromEvent(window, 'keyup').subscribe((event: any) => {
             let key = event.key.toLowerCase();
-            this.actions[key] = false; // Mark key as released
+            this.keys[key] = false; // Mark key as released
 
             // Recalculate velocity based on remaining active keys
             let newVelocity = new THREE.Vector3();
@@ -212,16 +237,20 @@ export class User extends MapSite {
             let strafeDirection = new THREE.Vector3();
             strafeDirection.crossVectors(this.camera.up, forwardVector).normalize();
 
-            if (this.actions.w) newVelocity.add(forwardVector.clone().multiplyScalar(this.speed));
-            if (this.actions.s) newVelocity.add(forwardVector.clone().multiplyScalar(-this.speed));
-            if (this.actions.a) newVelocity.add(strafeDirection.clone().multiplyScalar(this.speed));
-            if (this.actions.d) newVelocity.add(strafeDirection.clone().multiplyScalar(-this.speed));
+            if (this.keys.w) newVelocity.add(forwardVector.clone().multiplyScalar(this.speed));
+            if (this.keys.s) newVelocity.add(forwardVector.clone().multiplyScalar(-this.speed));
+            if (this.keys.a) newVelocity.add(strafeDirection.clone().multiplyScalar(this.speed));
+            if (this.keys.d) newVelocity.add(strafeDirection.clone().multiplyScalar(-this.speed));
+            if (this.keys.space) setTimeout(() => {
+                this.endJumpInit()
+                this.keys.space = false;
+            }, 300);
 
             // Update velocity based on remaining active keys
             this.velocity.copy(newVelocity);
 
             // Stop animation if no movement keys are held
-            if (this.animations.walk && !this.actions.w && !this.actions.s && !this.actions.a && !this.actions.d) {
+            if (this.animations.walk && !this.keys.w && !this.keys.s && !this.keys.a && !this.keys.d) {
                 this.animations.walk.speedFactor = 0;
                 this.startAnimation('lounge');
             }
@@ -377,14 +406,50 @@ export class User extends MapSite {
 
     override Act(): void {
         super.Act();
-        
+
+        /*
+
+         _______   ______   .______     ____    __    ____  ___      .______       _______  
+        |   ____| /  __  \  |   _  \    \   \  /  \  /   / /   \     |   _  \     |       \ 
+        |  |__   |  |  |  | |  |_)  |    \   \/    \/   / /  ^  \    |  |_)  |    |  .--.  |
+        |   __|  |  |  |  | |      /      \            / /  /_\  \   |      /     |  |  |  |
+        |  |     |  `--'  | |  |\  \----.  \    /\    / /  _____  \  |  |\  \----.|  '--'  |
+        |__|      \______/  | _| `._____|   \__/  \__/ /__/     \__\ | _| `._____||_______/ 
+                                                                                            
+
+        */
         let forwardVector = new THREE.Vector3();
         this.camera.getWorldDirection(forwardVector);
-        forwardVector.y = 0;
+        /*
+
+         _____  _____  _______   
+        |_   _||_   _||_   __ \  
+          | |    | |    | |__) | 
+          | '    ' |    |  ___/  
+           \ \__/ /    _| |_     
+            `.__.'    |_____|
+
+        */
+        // if (this.states[Actions.Jump]) {
+        //     if (this.velocity.y > -9.81) {
+        //         this.velocity.y -= 0.01;
+        //         debugger
+        //     }
+        // }
+        if (this.actions[Actions.Jump].start && !this.states[Actions.Jump]) {
+            this.velocity.y += this.JUMP_SPIRIT;
+            this.states[Actions.Jump] = true;
+        }
+        
+
         forwardVector.normalize();
 
-        for (let action in this.actions) {
-            if (this.actions[action]) {
+        
+
+
+
+        for (let action in this.keys) {
+            if (this.keys[action]) {
                 switch (action) {
                     case 'arrowleft':
                         this.rotate(this.rotationSpeed);
@@ -398,6 +463,7 @@ export class User extends MapSite {
                     case 'arrowup':
                         this.cameraTheta -= 0.005;
                         break;
+                    case 'space':
                 }
             }
         }
@@ -417,6 +483,7 @@ export class User extends MapSite {
         }
 
         this.animationMixer.update(0.016); // Update animation mixer every frame (~60 FPS)
+        
         this.move();
         this.EngageEnvironment(this.environment, forwardVector);
         this.alignCamera();
@@ -427,19 +494,23 @@ export class User extends MapSite {
 
     EngageEnvironment(environment: MapSite[], forwardVector: THREE.Vector3): void {
         const fallVector: THREE.Vector3 = this.Fall();
+        const objectsTouched: Touch[] = [];
         const userBox = new THREE.Box3().setFromObject(this.model.scene);
         let sidewaysVector = new THREE.Vector3();
         sidewaysVector.crossVectors(this.camera.up, forwardVector).normalize();
         
-        const EngageMeshes = (mapSite: MapSite, item: (THREE.Group | THREE.Mesh)) => {
+        const EngageMeshes = (mapSite: MapSite, item: (THREE.Group | THREE.Mesh)): Touch[] => {
             if (item instanceof THREE.Group) {
                 for (let child of item.children) {
                     EngageMeshes(mapSite, child as (THREE.Group | THREE.Mesh));
                 }
             } else  {
                 const meshBox = new THREE.Box3().setFromObject(item);
+
+
                 if (userBox.intersectsBox(meshBox)) {
                     this.currentRoomId = mapSite.id;
+
                     this.targetSubject.next({ 
                         mesh: item as THREE.Mesh, 
                         mapSite: mapSite,
@@ -447,14 +518,43 @@ export class User extends MapSite {
                         message: `${mapSite.text}: ${item.name}`,
                         content: ''
                     } as Target)
-                    this.Touch(mapSite, userBox, item, meshBox, forwardVector);
+
+
+                    /*
+
+                    ▗▄▄▄▖▗▄▖ ▗▖ ▗▖ ▗▄▄▖▗▖ ▗▖
+                      █ ▐▌ ▐▌▐▌ ▐▌▐▌   ▐▌ ▐▌
+                      █ ▐▌ ▐▌▐▌ ▐▌▐▌   ▐▛▀▜▌
+                      █ ▝▚▄▞▘▝▚▄▞▘▝▚▄▄▖▐▌ ▐▌
+                        
+                    */
+                    const objectTouched: Touch|null = this.Touch(mapSite, userBox, item, meshBox, forwardVector);
+                    if (objectTouched) {
+                        objectsTouched.push(objectTouched);
+                        console.log('objectTouched', objectTouched);
+                    }
                 }
             }
-        }
+
+            return objectsTouched;
+        };
+
+        const ExistInSpace = (landed: boolean) => {
+            if (landed) {
+                fallVector.y = 0;
+            } else {
+                console.log("landless")
+                // fallVector.y = -0.981;
+            }
+        };
 
         for (let mapSite of environment) {
-            EngageMeshes(mapSite, mapSite.scene);
+            let objectsTouched: Touch[] = EngageMeshes(mapSite, mapSite.scene);     
         }
+
+        ExistInSpace(includes(objectsTouched, (objectTouched: Touch) => {
+            return objectTouched.name == Touches.Land;
+        }));
         
         this.model.scene.position.add(fallVector);
         this.activity.next(this);
@@ -470,22 +570,23 @@ export class User extends MapSite {
         mesh: THREE.Mesh,
         meshBox: THREE.Box3,
         forwardVector: THREE.Vector3
-    ): void {
-        if (/no\-collision/.test(mesh.name)) return
+    ): Touch|null {
+        if (/no\-collision/.test(mesh.name)) return null;
 
         mapSite.Mouseover(mesh, true);
 
         const userBottomY = userBox.min.y;
         const objectTopY = meshBox.max.y;
-        const threshold = 1;
+        const threshold = 10;
         const overheadDiff = Math.abs(userBottomY - objectTopY);
 
         // Handle landing on top
-        if ((overheadDiff < threshold || (userBottomY < objectTopY && threshold < 10)) && this.velocity.y < 0) {
+        if (overheadDiff < threshold && this.velocity.y < 0) {
             console.log("Landed on top at diff", overheadDiff);
+            this.states[Actions.Jump] = false;
             this.velocity.y = 0;
             this.model.scene.position.y = objectTopY + (mesh.geometry.boundingBox!.max.y - mesh.geometry.boundingBox!.min.y);
-            return;
+            return new Touch(Touches.Land);
         }
 
         // Use previous position to determine rollback direction
@@ -524,6 +625,9 @@ export class User extends MapSite {
 
         // Apply the correction to move the player outside the wall/corner
         this.model.scene.position.add(correctionVector);
+        console.log("Collided with", mesh.name, "at diff", Math.min(penetrationDepthX, penetrationDepthZ));
+
+        return new Touch(Touches.Side);
     }
 
 

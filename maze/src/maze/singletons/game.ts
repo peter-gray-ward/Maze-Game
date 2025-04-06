@@ -52,7 +52,6 @@ export class Game {
         }
 
         let ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
-        ambientLight.castShadow = true;
         ambientLight.position.set(this.maze.roomWidth * this.maze.dimensions * 2, 100, this.maze.roomWidth * this.maze.dimensions * 2);
         this.scene.add(ambientLight);
 

@@ -32,6 +32,31 @@
     text-overflow: ellipsis;
 }
 
+table {
+    
+    thead {
+        tr {
+            th {
+                font-family: cursive;
+                color: white;
+            }
+        }
+    }
+    tr {
+        th:first-of-type {
+            font-weight: 900;
+            color: aliceblue;
+            text-shadow: -1px -1px blue;;
+        }
+        border-bottom: 0.2px solid white;
+        th, td {
+            border-right: 0.2px solid white;
+            border-top: 0.2px solid white;
+            color: lawngreen
+        }
+    }
+}
+
 #engagement {
     height: 100vh;
     display: flex;
@@ -90,7 +115,7 @@
     position: absolute;
     width: 1rem;
     height: 1rem;
-    background: blue;
+    background: red;
     border-radius: 100%;
     left: 0;
     top: 0;
@@ -99,8 +124,6 @@
 
 #header {
     position: absolute;
-    left: 0;
-    top: 0;
     display: flex;
     flex-direction: column;
     align-items: start;
@@ -110,12 +133,12 @@
     padding: 0.2rem;
     box-sizing: border-box;
     z-index: 2;
-    width: 10rem;
-    height: 10rem;
+    width: 16rem;
+    height: 16rem;
     border-radius: 100%;
-    left: calc(100% - 7.5rem);
-    top: -2.5rem;
-    background: maroon;
+    left: calc(100% - 13rem);
+    top: -3rem;
+    background: rgba(128, 0, 0, 0.5);
     overflow: hidden;
 
     div {

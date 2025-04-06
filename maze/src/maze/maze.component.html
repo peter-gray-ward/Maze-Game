@@ -1,10 +1,12 @@
 <div *ngFor="let room of maze.rooms; trackBy: trackById">
   <room [room]="room"></room>
 </div>
+
 <i #userMarker
   *ngIf="userPosition()" id="user-position-marker" 
   [style.left.px]="userPosition().left" 
   [style.top.px]="userPosition().top"></i>
+
 <div id="header">
   <div>
     <span id="map-icon"></span>
@@ -14,13 +16,36 @@
     <a (click)="toggleFirstPerson()">{{user.firstPerson ? '3rd Person ' : '1st Person '}}</a>
   </div>
   <div>
-    <pre [style.font-size.px]="10">
-  {{ userPosition().x.toFixed(1) }}, 
-  {{ userPosition().y.toFixed(1) }}
-  {{ userPosition().z.toFixed(1) }}</pre>
+    <table [style.font-size.px]="10">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Position</th>
+          <th>Velocity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>x</th>
+          <td>{{ userPosition().x.toFixed(1) }}</td>
+          <td>{{ userVelocity().x.toFixed(1) }}</td>
+        </tr>
+        <tr>
+          <th>y</th>
+          <td>{{ userPosition().y.toFixed(1) }}</td>
+          <td>{{ userVelocity().y.toFixed(1) }}</td>
+        </tr>
+        <tr>
+          <th>z</th>
+          <td>{{ userPosition().z.toFixed(1) }}</td>
+          <td>{{ userVelocity().z.toFixed(1) }}</td>
+        </tr>
+    </table>
   </div>
 </div>
+
 <div id="target" *ngIf="target">{{ target.message }}</div>
+
 <div *ngIf="engagement" id="engagement">
   <button id="exit-engagement" (click)="exitEngagement()">X</button>
   <article [innerHTML]="engagement.content" [style.background]="engagement.mapSite.color"></article>

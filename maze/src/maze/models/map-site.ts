@@ -18,7 +18,7 @@ export abstract class MapSite {
     public rotation!: THREE.Vector3;
     public velocity: THREE.Vector3 = new THREE.Vector3(
         0,
-        GRAVITY,
+        -0.1,
         0
     );
     public touchable: boolean = true;
