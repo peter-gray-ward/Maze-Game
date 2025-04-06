@@ -3,6 +3,7 @@ import { MapSite } from './map-site';
 import { Game } from '../singletons/game';
 import * as style from '../utils/style';
 
+let dimensions= 20;
 
 export class Floor extends MapSite {
     public floorDepth: number = 12;
@@ -18,12 +19,15 @@ export class Floor extends MapSite {
 
     override Build() {
         super.Build();
+
+        let percentNearToEnd: number = (this.id[0] + this.id[2]) / dimensions;
         
         const floorMesh = new THREE.Mesh(
             new THREE.BoxGeometry(this.width, this.floorDepth, this.depth),
             new THREE.MeshStandardMaterial({
                 map: style.floorTexture,
                 // wireframe: true,
+                color: new THREE.Color(`rgb(255,${Math.floor(255 * percentNearToEnd)},255)`),
                 side: THREE.DoubleSide
             })
         );

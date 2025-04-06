@@ -79,7 +79,7 @@ export class MazeComponent {
                   / mazeHeight
                ) + halfRoomWidthPx - halfUserMarkerPx
         }));
-        console.log(this.userVelocity(), user.velocity);
+        
         this.userVelocity.update(pos => user.velocity);
         this.userAnimations = Object.keys(user.animations)
           .filter(animation => user.animations[animation] && user.animations[animation].speedFactor);

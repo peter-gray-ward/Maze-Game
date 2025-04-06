@@ -561,6 +561,9 @@ export class User extends MapSite {
     }
 
     Fall(): THREE.Vector3 {
+        if (this.states[Actions.Jump]) {
+            this.velocity.y -= 0.1;
+        }
         return this.localYAxis.clone().multiplyScalar(this.velocity.y);
     }
 
