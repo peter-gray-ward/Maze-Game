@@ -1,11 +1,13 @@
-<div *ngFor="let room of maze.rooms; trackBy: trackById">
+<div *ngFor="let room of maze.rooms; trackBy: trackById"
+  (mousemove)="setCursor($event)">
   <room [room]="room"></room>
 </div>
 
 <i #userMarker
-  *ngIf="userPosition()" id="user-position-marker" 
-  [style.left.px]="userPosition().left" 
-  [style.top.px]="userPosition().top"></i>
+  *ngIf="userPosition()" 
+  id="user-position-marker">
+  ▾
+</i>
 
 <div id="header">
   <div>
@@ -15,8 +17,8 @@
   <div *ngIf="user">
     <a (click)="toggleFirstPerson()">{{user.firstPerson ? '3rd Person ' : '1st Person '}}</a>
   </div>
-  <div>
-    <table [style.font-size.px]="10">
+  <div [style.paddingLeft.px]="30">
+    <table>
       <thead>
         <tr>
           <th></th>
@@ -44,7 +46,9 @@
   </div>
 </div>
 
-<div id="target" *ngIf="target">{{ target.message }}</div>
+<div id="target" *ngIf="target && cursor.mouse"
+  [style.left.px]="cursor.left" 
+  [style.top.px]="cursor.top">>{{ target.message }}</div>
 
 <div *ngIf="engagement" id="engagement">
   <button id="exit-engagement" (click)="exitEngagement()">X</button>

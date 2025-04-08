@@ -14,6 +14,7 @@ import { User, UserPosition, Target } from './models/user';
 import { Game } from './singletons/game';
 import { KeyOf, getAllDescendants } from './utils/object';
 import * as style from './utils/style';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Component({
   selector: 'maze-root',
@@ -30,6 +31,15 @@ export class MazeComponent {
   toggle: any = {
     map: false
   };
+
+  cursorSubject: BehaviorSubject<any> = new BehaviorSubject<any>({
+    left: 0,
+    top: 0
+  });
+  cursor$: Observable<any> = this.cursorSubject.asObservable();
+  cursor: any = {};
+  target: Target | null = null;
+
   user!: User;
   @ViewChild("userMarker") userMarker!: ElementRef;
   userPosition = signal({ x: 0, y: 0, z: 0, left: 0, top: 0 });
@@ -37,8 +47,17 @@ export class MazeComponent {
   userAnimations: any = [];
   game: Game = inject(Game);
   loaded: boolean = false;
-  target: Target | null = null;
+  
+  
+  
   engagement: Target | null = null;
+
+  setCursor(event: MouseEvent) {
+    this.cursor = {
+      left: event.clientX,
+      top: event.clientY
+    };
+  }
 
   constructor() {
     this.maze = new Maze(this.game, this.dimensions);
@@ -57,6 +76,11 @@ export class MazeComponent {
     const mazeWidth = this.maze.dimensions * this.maze.roomDepth;
     const mazeHeight = this.maze.dimensions * this.maze.roomDepth;
     const halfRoomWidth = this.maze.roomWidth / 2;
+    this.cursor$.subscribe(cursor => {
+      console.log(cursor)
+      this.cursor = cursor;
+    });
+    this.user.cursorSubject = this.cursorSubject;
     this.user.loaded.subscribe((user: User) => {
       this.user.activity.subscribe((user: User) => {
         const mazeWidthPx = Math.min(window.innerWidth, window.innerHeight);
@@ -124,6 +148,8 @@ export class MazeComponent {
       this.user.cameraRadius = 144;
     }
   }
+
+
 
   generateMaze(): void {
     this.maze = new Maze(this.game, this.dimensions);

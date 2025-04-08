@@ -41,7 +41,7 @@ export class User extends MapSite {
     model!: GLTFModel;
     firstPerson: boolean = false;
     camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-    speed: number = 3;
+    speed: number = 8;
     JUMP_SPIRIT: number = 1
     rotationSpeed: number = Math.PI / 11;
     animationMixer!: THREE.AnimationMixer;
@@ -73,6 +73,7 @@ export class User extends MapSite {
     currentRoomId: number[] = [];
     targetSubject = new BehaviorSubject<Target|null>(null);
     target$ = this.targetSubject.asObservable();
+    cursorSubject: BehaviorSubject<{[key:string]: number}> = new BehaviorSubject<{[key:string]: number}>({ left: 0, top: 0 });
     engagementSubject = new BehaviorSubject<Target|null>(null);
     public engagement$ = this.engagementSubject.asObservable();
     private sanitizer = inject(DomSanitizer);
@@ -171,6 +172,9 @@ export class User extends MapSite {
 
 
     private addEvents(): void {
+        const mouse = new THREE.Vector2();
+        const raycaster = new THREE.Raycaster();
+        
         fromEvent(window, 'keydown').subscribe((event: any) => {
             let key = event.key.toLowerCase();
 
@@ -223,7 +227,6 @@ export class User extends MapSite {
 
             this.velocity.add(velocityAddition);
         });
-
         fromEvent(window, 'keyup').subscribe((event: any) => {
             let key = event.key.toLowerCase();
             this.keys[key] = false; // Mark key as released
@@ -255,11 +258,14 @@ export class User extends MapSite {
                 this.startAnimation('lounge');
             }
         });
-
-        const mouse = new THREE.Vector2();
-        const raycaster = new THREE.Raycaster();
         fromEvent(window, 'mousemove').subscribe((event: any) => {
             if (this.engagementSubject.value) return;
+
+            this.cursorSubject.next({ 
+                left: event.clientX, 
+                top: event.clientY,
+                mouse: 1
+            });
 
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -327,7 +333,6 @@ export class User extends MapSite {
                 }
             }
         });
-
         fromEvent(window, 'mousedown').subscribe((event: any) => {
             if (!this.engagementSubject.value && this.targetSubject.value) {
                 const val = this.targetSubject.value;
@@ -335,7 +340,6 @@ export class User extends MapSite {
                 if (val.mapSite.isItem) this.engagementSubject.next(val);
             }
         });
-
         fromEvent(window, 'mouseup').subscribe((event: any) => {
             this.targetSubject.next(null);
         });
@@ -585,7 +589,6 @@ export class User extends MapSite {
 
         // Handle landing on top
         if (overheadDiff < threshold && this.velocity.y < 0) {
-            console.log("Landed on top at diff", overheadDiff);
             this.states[Actions.Jump] = false;
             this.velocity.y = 0;
             this.model.scene.position.y = objectTopY + (mesh.geometry.boundingBox!.max.y - mesh.geometry.boundingBox!.min.y);
@@ -628,7 +631,6 @@ export class User extends MapSite {
 
         // Apply the correction to move the player outside the wall/corner
         this.model.scene.position.add(correctionVector);
-        console.log("Collided with", mesh.name, "at diff", Math.min(penetrationDepthX, penetrationDepthZ));
 
         return new Touch(Touches.Side);
     }
