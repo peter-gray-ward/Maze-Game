@@ -26,6 +26,10 @@ export const wallpaperTextureShell = new THREE.TextureLoader().load("/wallpaper.
     texture.repeat.set(5000, 5000);
 });
 
+export const randomInRange = (from: number, to: number): number => {
+    return to + Math.random() * (to - from);
+}
+
 export function buildShell(pieces: THREE.Mesh[], texture: THREE.Texture): THREE.Mesh {
 	let shellVertices: number[] = [];
     let shellIndices: number[] = [];

@@ -10,11 +10,12 @@ import { Wall } from './models/wall';
 import { DirectionType, Direction, OppositeDirection, OtherDirections } from './constants/direction';
 import { RoomComponent } from './components/room/room.component';
 import * as THREE from 'three';
-import { User, UserPosition, Target } from './models/user';
 import { Game } from './singletons/game';
 import { KeyOf, getAllDescendants } from './utils/object';
 import * as style from './utils/style';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { GLTFModel, UserPosition, Target } from './constants/user';
+import { User } from './models/user';
 
 @Component({
   selector: 'maze-root',
@@ -44,6 +45,7 @@ export class MazeComponent {
   @ViewChild("userMarker") userMarker!: ElementRef;
   userPosition = signal({ x: 0, y: 0, z: 0, left: 0, top: 0 });
   userVelocity = signal({ x: 0, y: 0, z: 0 });
+  userSpeed = signal(0);
   userAnimations: any = [];
   game: Game = inject(Game);
   loaded: boolean = false;
@@ -77,7 +79,6 @@ export class MazeComponent {
     const mazeHeight = this.maze.dimensions * this.maze.roomDepth;
     const halfRoomWidth = this.maze.roomWidth / 2;
     this.cursor$.subscribe(cursor => {
-      console.log(cursor)
       this.cursor = cursor;
     });
     this.user.cursorSubject = this.cursorSubject;
@@ -103,6 +104,7 @@ export class MazeComponent {
                   / mazeHeight
                ) + halfRoomWidthPx - halfUserMarkerPx
         }));
+        this.userSpeed.update(prev => user.speed);
         
         this.userVelocity.update(pos => user.velocity);
         this.userAnimations = Object.keys(user.animations)

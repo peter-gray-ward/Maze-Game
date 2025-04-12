@@ -2,7 +2,7 @@ import { MapSite } from "./map-site";
 import * as THREE from 'three';
 import { Game } from '../singletons/game';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-
+import { randomInRange } from '../utils/style';
 
 
 export abstract class Light extends MapSite {
@@ -18,7 +18,11 @@ export class CeilingLight extends Light {
     override Build() {
         super.Build();
 
-        this.light = new THREE.PointLight(0xffffff, 10000, 1000);
+        this.light = new THREE.PointLight(new THREE.Color(
+            randomInRange(randomInRange(0.3, 0.7), 1),
+            randomInRange(randomInRange(0.3, 0.7), 1),
+            randomInRange(randomInRange(0.3, 0.7), 1)
+        ), randomInRange(1000, 8000), 1000);
         this.light.position.copy(this.position)
         this.light.castShadow = true;
         (this.light.shadow as THREE.PointLightShadow).mapSize.width = 512; 
@@ -35,7 +39,7 @@ export class CeilingLight extends Light {
 
         let lightGroup = new THREE.Group();
         let wire = new THREE.Mesh(
-            new THREE.CylinderGeometry(1, 1, 20), // Tall and thin wire
+            new THREE.CylinderGeometry(.8, .3, 20), // Tall and thin wire
             new THREE.MeshStandardMaterial({
                 metalness: 1,
                 roughness: 0,
@@ -51,8 +55,8 @@ export class CeilingLight extends Light {
         for ( let i = 0; i < 10; i ++ ) {
             points.push( new THREE.Vector2( Math.sin( i * 0.2 ) * scale + halfScale, ( i - halfScale ) * 2 ) );
         }
-        const geometry = new THREE.LatheGeometry( points, 30 );
-        const material = new THREE.MeshStandardMaterial( { color: 'slategray', side: THREE.DoubleSide } );
+        const geometry = new THREE.SphereGeometry( scale, 100, 10 );
+        const material = new THREE.MeshStandardMaterial( { color: 'slategray', side: THREE.DoubleSide, opacity: 0.3, transparent: true } );
         const lathe = new THREE.Mesh( geometry, material );
         lathe.castShadow = true;
         lathe.rotation.x = Math.PI;
@@ -67,7 +71,7 @@ export class CeilingLight extends Light {
                 color: new THREE.Color('lightyellow')
             })
         );
-        lightBulb.position.set(0, -22, 0); 
+        lightBulb.position.set(0, -20, 0); 
 
         lightGroup.add(wire, lathe, lightBulb);
         

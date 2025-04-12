@@ -10,38 +10,15 @@ import { getAllDescendants, includes} from '../utils/object';
 import { BookShelf } from './book-shelf';
 import { Book, IBook } from './book';
 import { IAction, Actions, Action, Touches, Touch } from '../constants/user';
-
-export interface GLTFModel {
-	animations: any[];
-	asset: any;
-	cameras: any[];
-	parser: any;
-	scene: THREE.Group;
-	scenes: THREE.Group[];
-	userData: any;
-}
-
-export interface UserPosition {
-    x: number;
-    y: number;
-    z: number;
-    left: number;
-    top: number;
-}
-
-export interface Target {
-    mesh: THREE.Mesh;
-    mapSite: MapSite;
-    message: string;
-    data: any;
-    content: string;
-};
+import { PixabayResponse, PixabayHit } from '../constants/index';
+import { GLTFModel, UserPosition, Target } from '../constants/user'
+import Pixabay from '../services/pixabay.service';
 
 export class User extends MapSite {
     model!: GLTFModel;
     firstPerson: boolean = false;
     camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-    speed: number = 8;
+    speed: number = 2;
     JUMP_SPIRIT: number = 1
     rotationSpeed: number = Math.PI / 11;
     animationMixer!: THREE.AnimationMixer;
@@ -77,6 +54,9 @@ export class User extends MapSite {
     engagementSubject = new BehaviorSubject<Target|null>(null);
     public engagement$ = this.engagementSubject.asObservable();
     private sanitizer = inject(DomSanitizer);
+    pixabay: Pixabay = inject(Pixabay);
+    running: boolean = false;
+    walking: boolean = false;
 
     constructor(
         game: Game,
@@ -116,16 +96,6 @@ export class User extends MapSite {
         return "peach";
     }
 
-
-    private move(): void {
-        // Jump
-
-
-        this.previousPosition.copy(this.model.scene.position.clone());
-        this.camera.position.add(this.velocity);
-        this.model.scene.position.add(this.velocity);
-        this.alignCamera();
-    }
 
     private alignCamera(): void {
         const headBone = this.model.scene.getObjectByName("Beta_Joints");
@@ -170,45 +140,40 @@ export class User extends MapSite {
         this.actions[Actions.Jump].start = false;
     }
 
+    private move(key: string = '') {
 
-    private addEvents(): void {
-        const mouse = new THREE.Vector2();
-        const raycaster = new THREE.Raycaster();
-        
-        fromEvent(window, 'keydown').subscribe((event: any) => {
-            let key = event.key.toLowerCase();
+        let forwardVector = new THREE.Vector3();
+        this.camera.getWorldDirection(forwardVector);
+        forwardVector.y = 0;
+        forwardVector.normalize();
+        let strafeDirection = new THREE.Vector3();
+        strafeDirection.crossVectors(this.camera.up, forwardVector).normalize();
 
-            let y = 0;
-            
-            let forwardVector = new THREE.Vector3();
-            this.camera.getWorldDirection(forwardVector);
-            forwardVector.y = y;
-            forwardVector.normalize();
-            let strafeDirection = new THREE.Vector3();
-            strafeDirection.crossVectors(this.camera.up, forwardVector).normalize();
+        let velocityAddition = new THREE.Vector3();
+        let speed = this.keys.shift ? this.speed * 5 : this.speed;
 
-            let velocityAddition = new THREE.Vector3();
 
-            switch (key) {
+        if (['w','a','s','d','arrowleft','arrowup','arrowright','arrowdown'].includes(key)) {
+             switch (key) {
                 case 'w':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
-                    if (!this.keys[key]) velocityAddition.add(forwardVector.clone().multiplyScalar(this.speed));
+                    velocityAddition.add(forwardVector.clone().multiplyScalar(speed));
                     break;
                 case 's':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
-                    if (!this.keys[key]) velocityAddition.add(forwardVector.clone().multiplyScalar(-this.speed));
+                    velocityAddition.add(forwardVector.clone().multiplyScalar(-speed));
                     break;
                 case 'a':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
-                    if (!this.keys[key]) velocityAddition.add(strafeDirection.clone().multiplyScalar(this.speed));
+                    velocityAddition.add(strafeDirection.clone().multiplyScalar(speed));
                     break;
                 case 'd':
                     this.startAnimation('walk');
                     this.stopAnimation('lounge');
-                    if (!this.keys[key]) velocityAddition.add(strafeDirection.clone().multiplyScalar(-this.speed));
+                    velocityAddition.add(strafeDirection.clone().multiplyScalar(-speed));
                     break;
                 case 'arrowleft':
                     this.rotate(1);
@@ -221,14 +186,51 @@ export class User extends MapSite {
                 case ' ':
                     key = 'space';
                     if (!this.keys[key]) this.startJumpInit(new Date());
+                    break;
+                case 'shift':
+                    if (!this.running) {
+                        this.speed *= 3;
+                        this.running = true;
+                    }
+                    break;
             }
+
+            this.velocity.add(velocityAddition);
+
+            if (['w','a','s','d'].includes(key)) {
+                this.previousPosition.copy(this.model.scene.position.clone());
+                this.camera.position.add(this.velocity);
+                this.model.scene.position.add(this.velocity);
+                this.alignCamera();
+            }
+        }
+
+        this.velocity.add(velocityAddition);
+    }
+
+    private addEvents(): void {
+        const mouse = new THREE.Vector2();
+        const raycaster = new THREE.Raycaster();
+        
+        fromEvent(window, 'keydown').subscribe((event: any) => {
+            let key = event.key.toLowerCase();
 
             this.keys[key] = true;
 
-            this.velocity.add(velocityAddition);
+            this.move(key);
+
         });
         fromEvent(window, 'keyup').subscribe((event: any) => {
             let key = event.key.toLowerCase();
+
+
+
+            if (key == 'shift') {
+                console.log("shift keyup")
+                this.running = false;
+            }
+
+
             this.keys[key] = false; // Mark key as released
 
             // Recalculate velocity based on remaining active keys
@@ -287,16 +289,39 @@ export class User extends MapSite {
                 });
 
 
+                /*
+
+                HHHHHHHHH     HHHHHHHHH                                                                             
+                H:::::::H     H:::::::H                                                                             
+                H:::::::H     H:::::::H                                                                             
+                HH::::::H     H::::::HH                                                                             
+                  H:::::H     H:::::H     ooooooooooo vvvvvvv           vvvvvvv eeeeeeeeeeee    rrrrr   rrrrrrrrr   
+                  H:::::H     H:::::H   oo:::::::::::oov:::::v         v:::::vee::::::::::::ee  r::::rrr:::::::::r  
+                  H::::::HHHHH::::::H  o:::::::::::::::ov:::::v       v:::::ve::::::eeeee:::::eer:::::::::::::::::r 
+                  H:::::::::::::::::H  o:::::ooooo:::::o v:::::v     v:::::ve::::::e     e:::::err::::::rrrrr::::::r
+                  H:::::::::::::::::H  o::::o     o::::o  v:::::v   v:::::v e:::::::eeeee::::::e r:::::r     r:::::r
+                  H::::::HHHHH::::::H  o::::o     o::::o   v:::::v v:::::v  e:::::::::::::::::e  r:::::r     rrrrrrr
+                  H:::::H     H:::::H  o::::o     o::::o    v:::::v:::::v   e::::::eeeeeeeeeee   r:::::r            
+                  H:::::H     H:::::H  o::::o     o::::o     v:::::::::v    e:::::::e            r:::::r            
+                HH::::::H     H::::::HHo:::::ooooo:::::o      v:::::::v     e::::::::e           r:::::r            
+                H:::::::H     H:::::::Ho:::::::::::::::o       v:::::v       e::::::::eeeeeeee   r:::::r            
+                H:::::::H     H:::::::H oo:::::::::::oo         v:::v         ee:::::::::::::e   r:::::r            
+                HHHHHHHHH     HHHHHHHHH   ooooooooooo            vvv            eeeeeeeeeeeeee   rrrrrrr   
+
+                */
+
+
                 const intersects = raycaster.intersectObjects(allRoomChildren);
                 let foundItem = false;
+                let targets: { [key: string]: Target } = {};
+                let targetPromises = [];
+
 
                 if (intersects.length > 0) {
                     let mesh = intersects[0].object;
-                    
                     for (let item of currentRoom.items) {
-
-
                         if (item instanceof BookShelf) {
+                            
                             let target: Target|null = null;
                             foundItem = true;
                             for (let book of item.books) {
@@ -308,8 +333,22 @@ export class User extends MapSite {
                                         mapSite: book as MapSite,
                                         data: (book as Book).book,
                                         message: `${(book as Book).book.title} (${(book as Book).book.topic})`,
-                                        content: this.sanitizer.bypassSecurityTrustHtml(`<iframe src="${iFrameSrc}" width="90%" height="90%" style="background:white"></iframe>`)
+                                        content: this.sanitizer.bypassSecurityTrustHtml(`<iframe src="${iFrameSrc}" 
+                                            width="90%" height="90%" style="background:white"></iframe>`)
                                     } as Target;
+
+                                    const targetQ = target.data.title;
+                                    const meshId = target.mesh.id;
+                                    targets[meshId] = target;
+
+                                    targetPromises.push(
+                                        new Promise<void>((resolve: any) => {
+                                            this.pixabay.get(targetQ).then((res: string) => {
+                                                targets[meshId].background = `url(${res})`;
+                                                resolve();
+                                            });
+                                        })
+                                    )
                                 } else if (book.hovered) {
                                     item.Mouseleave();
                                 }
@@ -319,14 +358,15 @@ export class User extends MapSite {
                                 || (target && this.targetSubject.value && target.mesh.uuid !== this.targetSubject.value.mesh.uuid)) {
                                 this.targetSubject.next(target);
                             }
+
+
                         }
-
-
-
                     }
-
-                    
                 }
+
+                Promise.all(targetPromises).then(() => {
+                    this.targetSubject.next(targets[meshId]);
+                });
 
                 if (!foundItem) {
                     this.targetSubject.next(null);
@@ -424,6 +464,10 @@ export class User extends MapSite {
         */
         let forwardVector = new THREE.Vector3();
         this.camera.getWorldDirection(forwardVector);
+
+        this.model.scene.position.add(this.velocity);
+
+
         /*
 
          _____  _____  _______   
@@ -546,9 +590,6 @@ export class User extends MapSite {
         const ExistInSpace = (landed: boolean) => {
             if (landed) {
                 fallVector.y = 0;
-            } else {
-                console.log("landless")
-                // fallVector.y = -0.981;
             }
         };
 

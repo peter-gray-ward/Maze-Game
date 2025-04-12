@@ -1,3 +1,6 @@
+import * as THREE from 'three';
+import { MapSite } from '../models/map-site';
+
 export enum Actions {
     Jump = 1,
     Run = 2,
@@ -27,3 +30,30 @@ export class Touch {
         this.name = name;
     }
 }
+
+export interface GLTFModel {
+    animations: any[];
+    asset: any;
+    cameras: any[];
+    parser: any;
+    scene: THREE.Group;
+    scenes: THREE.Group[];
+    userData: any;
+}
+
+export interface UserPosition {
+    x: number;
+    y: number;
+    z: number;
+    left: number;
+    top: number;
+}
+
+export interface Target {
+    mesh: THREE.Mesh;
+    mapSite: MapSite;
+    message: string;
+    data: any;
+    content: string;
+    background: string;
+};
