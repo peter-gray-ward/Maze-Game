@@ -50,6 +50,7 @@ export class User extends MapSite {
     currentRoomId: number[] = [];
     targetSubject = new BehaviorSubject<Target|null>(null);
     target$ = this.targetSubject.asObservable();
+    target: Target|null = null;
     cursorSubject: BehaviorSubject<{[key:string]: number}> = new BehaviorSubject<{[key:string]: number}>({ left: 0, top: 0 });
     engagementSubject = new BehaviorSubject<Target|null>(null);
     public engagement$ = this.engagementSubject.asObservable();
@@ -312,18 +313,17 @@ export class User extends MapSite {
 
 
                 const intersects = raycaster.intersectObjects(allRoomChildren);
-                let foundItem = false;
-                let targets: { [key: string]: Target } = {};
+                let target = null;
                 let targetPromises = [];
 
 
                 if (intersects.length > 0) {
+
                     let mesh = intersects[0].object;
+
                     for (let item of currentRoom.items) {
                         if (item instanceof BookShelf) {
                             
-                            let target: Target|null = null;
-                            foundItem = true;
                             for (let book of item.books) {
                                 if (book.scene.uuid == mesh.uuid && !book.hovered) {
                                     item.Mouseover(mesh as THREE.Mesh);
@@ -337,14 +337,14 @@ export class User extends MapSite {
                                             width="90%" height="90%" style="background:white"></iframe>`)
                                     } as Target;
 
-                                    const targetQ = target.data.title;
-                                    const meshId = target.mesh.id;
-                                    targets[meshId] = target;
-
                                     targetPromises.push(
                                         new Promise<void>((resolve: any) => {
-                                            this.pixabay.get(targetQ).then((res: string) => {
-                                                targets[meshId].background = `url(${res})`;
+                                            this.pixabay.get(this.target!.data.title).then((res: string) => {
+                                                this.target!.background = `url(${res})`;
+                                                ((this.target!.mapSite!.scene as THREE.Mesh)!.material as THREE.MeshStandardMaterial).map = new THREE.TextureLoader().load(res);
+                                                var _ = ((this.target!.mapSite!.scene as THREE.Mesh)!.material as THREE.MeshStandardMaterial);
+                                                _.color = new THREE.Color(0xffffff);
+                                                _.needsUpdate = true;
                                                 resolve();
                                             });
                                         })
@@ -353,24 +353,26 @@ export class User extends MapSite {
                                     item.Mouseleave();
                                 }
                             }
-                            if ((!this.targetSubject.value && target)
-                                || (this.targetSubject.value && !target)
-                                || (target && this.targetSubject.value && target.mesh.uuid !== this.targetSubject.value.mesh.uuid)) {
-                                this.targetSubject.next(target);
-                            }
-
-
                         }
                     }
                 }
 
-                Promise.all(targetPromises).then(() => {
-                    this.targetSubject.next(targets[meshId]);
-                });
-
-                if (!foundItem) {
+                if (target) {
+                    this.target = target;
+                } else {
+                    this.target = null;
                     this.targetSubject.next(null);
                 }
+                
+
+
+                Promise.all(targetPromises).then(() => {
+                    if (this.target) {
+                        this.targetSubject.next(this.target);
+                    }
+                });
+
+            
             }
         });
         fromEvent(window, 'mousedown').subscribe((event: any) => {

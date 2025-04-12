@@ -58,6 +58,7 @@
 
 <div id="target" *ngIf="target && cursor.mouse"
   [style.background]="target.background"
+  [style.backgroundSize]="'contain'"
   [style.left.px]="cursor.left" 
   [style.top.px]="cursor.top">{{ target.message }}</div>
 
