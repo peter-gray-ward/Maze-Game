@@ -313,7 +313,7 @@ export class User extends MapSite {
 
 
                 const intersects = raycaster.intersectObjects(allRoomChildren);
-                let target = null;
+                let target: Target|null = this.target ? this.target : null;
                 let targetPromises = [];
 
 
@@ -323,11 +323,12 @@ export class User extends MapSite {
 
                     for (let item of currentRoom.items) {
                         if (item instanceof BookShelf) {
-                            
                             for (let book of item.books) {
                                 if (book.scene.uuid == mesh.uuid && !book.hovered) {
+                                    book.hovered = true;
                                     item.Mouseover(mesh as THREE.Mesh);
                                     const iFrameSrc = ((book as Book).book as IBook).formats['text/html'];
+
                                     target = { 
                                         mesh: mesh as THREE.Mesh, 
                                         mapSite: book as MapSite,
@@ -338,18 +339,16 @@ export class User extends MapSite {
                                     } as Target;
 
                                     targetPromises.push(
-                                        new Promise<void>((resolve: any) => {
-                                            this.pixabay.get(this.target!.data.title).then((res: string) => {
-                                                this.target!.background = `url(${res})`;
-                                                ((this.target!.mapSite!.scene as THREE.Mesh)!.material as THREE.MeshStandardMaterial).map = new THREE.TextureLoader().load(res);
-                                                var _ = ((this.target!.mapSite!.scene as THREE.Mesh)!.material as THREE.MeshStandardMaterial);
-                                                _.color = new THREE.Color(0xffffff);
-                                                _.needsUpdate = true;
-                                                resolve();
-                                            });
+                                        this.pixabay.get(target.data.title).then((res: string) => {
+                                            target!.background = `url(${res})`;
+                                            var material = ((target!.mapSite!.scene as THREE.Mesh)!.material as THREE.MeshStandardMaterial);
+                                            material.map = new THREE.TextureLoader().load(res);
+                                            material.color = new THREE.Color(0xffffff);
+                                            material.needsUpdate = true;
                                         })
                                     )
                                 } else if (book.hovered) {
+                                    book.hovered = false;
                                     item.Mouseleave();
                                 }
                             }
@@ -357,18 +356,14 @@ export class User extends MapSite {
                     }
                 }
 
-                if (target) {
-                    this.target = target;
-                } else {
-                    this.target = null;
-                    this.targetSubject.next(null);
-                }
-                
-
 
                 Promise.all(targetPromises).then(() => {
-                    if (this.target) {
+                    if (target) {
+                        this.target = target
                         this.targetSubject.next(this.target);
+                    } else {
+                        this.target = null;
+                        this.targetSubject.next(null);
                     }
                 });
 
